@@ -1,0 +1,3 @@
+[submodule "deps/exogress"]
+	path = deps/exogress
+	url = https://github.com/exogress/exogress.git
