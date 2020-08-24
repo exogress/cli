@@ -83,9 +83,10 @@ async fn main() {
         .value_of("github_token")
         .expect("github token not set");
 
-    let version: Version = matches
+    let mut version: Version = matches
         .value_of("version")
         .expect("version not set")
+        .trim_start_matches('v')
         .parse()
         .expect("bad version");
 
@@ -96,10 +97,10 @@ async fn main() {
         .expect("additional_message not set");
 
     let macos_url = format!(
-        "https://github.com/exogress/exogress/releases/download/{version}/exogress-{version}-x86_64-apple-darwin.tar.gz",
+        "https://github.com/exogress/exogress/releases/download/v{version}/exogress-v{version}-x86_64-apple-darwin.tar.gz",
         version = version_string
     );
-    let linux_url = format!("https://github.com/exogress/exogress/releases/download/{version}/exogress-{version}-x86_64-unknown-linux-gnu.tar.gz", version = version_string);
+    let linux_url = format!("https://github.com/exogress/exogress/releases/download/v{version}/exogress-v{version}-x86_64-unknown-linux-gnu.tar.gz", version = version_string);
     // let repo_url = format!(
     //     "https://github.com/exogress/exogress/archive/{}.tar.gz",
     //     version
