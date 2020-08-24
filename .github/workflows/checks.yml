@@ -38,7 +38,7 @@ jobs:
           command: ${{ matrix.command }}
           args: ${{ matrix.args }}
 
-  checks:
+  native-checks:
     runs-on: ${{ matrix.os }}
     strategy:
       matrix:
@@ -82,8 +82,8 @@ jobs:
           command: test
           args: --target=${{ matrix.target }}
 
-  cross:
-    needs: native
+  cross-checks:
+    needs: native-checks
     runs-on: ubuntu-latest
     strategy:
       fail-fast: false
