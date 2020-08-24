@@ -23,6 +23,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
+        with:
+          submodules: true
 
       - uses: actions/cache@v2
         with:
@@ -61,6 +63,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
+        with:
+          submodules: true
 
       - uses: actions/cache@v2
         with:
@@ -108,6 +112,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
+        with:
+          submodules: true
 
       - uses: actions/cache@v2
         with:
