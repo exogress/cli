@@ -74,10 +74,10 @@ jobs:
             target
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
-      - name: Run cargo check
+      - name: Build
         uses: actions-rs/cargo@v1
         with:
-          command: check
+          command: build
           args: --target=${{ matrix.target }}
 
       - name: Run cargo test
