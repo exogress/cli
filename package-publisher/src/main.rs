@@ -400,6 +400,7 @@ async fn main() {
                 loop {
                     match reqwest::Client::new().head(url.clone()).send().await {
                         Ok(resp) => {
+                            info!("resp status = {}", resp.status());
                             if resp.status().is_success() {
                                 info!("{} found", url);
                                 break;
@@ -416,7 +417,7 @@ async fn main() {
             }
         };
 
-        if timeout(Duration::from_secs(200), try_download)
+        if timeout(Duration::from_secs(2000), try_download)
             .await
             .is_err()
         {
