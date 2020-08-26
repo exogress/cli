@@ -17,6 +17,8 @@ tracing = "0.1"
 tracing-subscriber = "0.2"
 tracing-futures = "0.2.4"
 stop-handle = "0.1"
+anyhow = "1.0.32"
+serde_yaml = "0.8.12"
 
 exogress-client-core = { version = "0.1", path = "deps/exogress/crates/client-core" }
 exogress-tunnel = { version = "0.1", path = "deps/exogress/crates/tunnel" }
