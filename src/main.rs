@@ -1,6 +1,7 @@
 #[macro_use]
 extern crate tracing;
 
+mod init;
 mod termination;
 
 use std::collections::VecDeque;
@@ -88,6 +89,7 @@ pub fn main() {
                 .default_value(DEFAULT_CONFIG_FILE)
                 .takes_value(true),
         )
+        .subcommand(App::new("init").about("create Exofile"))
         .subcommand(exogress_common_utils::clap::threads::add_args(
             exogress_common_utils::clap::log::add_args(spawn_args),
         ));
@@ -98,6 +100,12 @@ pub fn main() {
     exogress_common_utils::clap::autocompletion::handle_autocompletion(
         &mut args, &matches, "exogress",
     );
+
+    if let Some(_) = matches.subcommand_matches("init") {
+        init::create_exofile(".").expect("Could not init");
+
+        std::process::exit(0);
+    }
 
     let spawn_matches = matches
         .subcommand_matches("spawn")

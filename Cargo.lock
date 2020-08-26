@@ -476,6 +476,7 @@ dependencies = [
 name = "exogress"
 version = "0.0.1-alpha.42"
 dependencies = [
+ "anyhow",
  "clap",
  "exogress-client-core",
  "exogress-common-utils",
@@ -483,6 +484,7 @@ dependencies = [
  "exogress-entities",
  "exogress-tunnel",
  "futures",
+ "serde_yaml",
  "shadow-clone",
  "stop-handle",
  "tokio",
