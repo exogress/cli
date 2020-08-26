@@ -1,96 +1,103 @@
 use git2::build::RepoBuilder;
-use git2::{Cred, IndexAddOption, PushOptions, RemoteCallbacks, Signature};
-use semver::Version;
-use std::io::{Read, Write};
+use git2::{Cred, IndexAddOption, PushOptions, RemoteCallbacks, Repository, Signature};
+use std::fs;
 use std::path::Path;
-use std::{fs, io};
-use tempfile::tempdir;
+use tempfile::{tempdir, TempDir};
 use url::Url;
 
-fn pause() {
-    let mut stdin = io::stdin();
-    let mut stdout = io::stdout();
-
-    // We want the cursor to stay at the end of the line, so we print without a newline and flush manually.
-    write!(stdout, "Press any key to continue...").unwrap();
-    stdout.flush().unwrap();
-
-    // Read a single byte and discard
-    let _ = stdin.read(&mut [0u8]).unwrap();
+pub struct Repo {
+    dir: TempDir,
+    repo: Repository,
 }
 
-pub fn commit_file(
-    file_path: impl AsRef<Path>,
-    content: &str,
-    version: &Version,
-    additional_message: &str,
-    repo_url: Url,
-    token: &str,
-) -> Result<(), anyhow::Error> {
-    let clone_to = tempdir()?;
-    info!("clone to {:?}", clone_to);
-    let repo = RepoBuilder::new().clone(repo_url.as_str(), clone_to.path())?;
-    let absolute_path = clone_to.path().join(file_path.as_ref());
-    fs::write(absolute_path.clone(), content)?;
-    info!("{:?} saved", absolute_path.to_str());
-    let mut index = repo.index()?;
-    info!("add {:?}", file_path.as_ref().to_str());
-    index.add_all(
-        [file_path.as_ref().to_str().unwrap()].iter(),
-        IndexAddOption::DEFAULT,
-        None,
-    )?;
-    info!("write index");
-    index.write()?;
-    let tree_id = index.write_tree()?;
+impl Repo {
+    pub fn new(repo_url: Url) -> Result<Self, anyhow::Error> {
+        let clone_to = tempdir()?;
+        info!("clone to {:?}", clone_to);
+        let repo = RepoBuilder::new().clone(repo_url.as_str(), clone_to.path())?;
+        Ok(Repo {
+            dir: clone_to,
+            repo,
+        })
+    }
 
-    let signature = Signature::now("Package Publisher", "team@exogress.com")?;
-    let parent = repo
-        .head()
-        .ok()
-        .and_then(|h| h.target())
-        .ok_or(anyhow::Error::msg("no head"))?;
-    let parent = repo.find_commit(parent)?;
-    repo.commit(
-        Some("HEAD"),
-        &signature,
-        &signature,
-        format!("{}: {}", version, additional_message).as_str(),
-        &repo.find_tree(tree_id).unwrap(),
-        &[&parent],
-    )?;
+    pub fn path(&self) -> &Path {
+        self.dir.path()
+    }
 
-    info!("find origin");
-    let mut origin = repo.find_remote("origin")?;
-    info!("push");
-    let mut push_options = PushOptions::new();
-    let mut callbacks = RemoteCallbacks::new();
-    callbacks.credentials(|url, username_from_url, allowed_types| {
-        info!(
-            "credentials callback: {:?}, {:?}, {:?}",
-            url, username_from_url, allowed_types
-        );
-        Cred::userpass_plaintext(token, "")
-    });
+    pub fn add_file(
+        &self,
+        filename: impl AsRef<Path>,
+        content: impl AsRef<[u8]>,
+    ) -> Result<(), anyhow::Error> {
+        let absolute_path = self.dir.path().join(filename.as_ref());
+        fs::write(absolute_path.clone(), content)?;
+        info!("{:?} saved", absolute_path.to_str());
+        let mut index = self.repo.index()?;
+        info!("add {:?}", filename.as_ref().to_str());
+        index.add_all(
+            [filename.as_ref().to_str().unwrap()].iter(),
+            IndexAddOption::DEFAULT,
+            None,
+        )?;
 
-    callbacks.sideband_progress(|t| unsafe {
-        let s = std::str::from_utf8(t).expect("bad string");
-        info!("GIT PROGRESS: {}", s);
-        true
-    });
+        Ok(index.write()?)
+    }
 
-    callbacks.push_update_reference(|s1, s2| {
-        info!("GIT UPDATE: {:?}, {:?}", s1, s2);
+    pub fn commit(&self, msg: &str) -> Result<(), anyhow::Error> {
+        let mut index = self.repo.index()?;
+        let tree_id = index.write_tree()?;
+        let signature = Signature::now("Package Publisher", "team@exogress.com")?;
+        let parent = self
+            .repo
+            .head()
+            .ok()
+            .and_then(|h| h.target())
+            .ok_or(anyhow::Error::msg("no head"))?;
+        let parent = self.repo.find_commit(parent)?;
+        let _ = self.repo.commit(
+            Some("HEAD"),
+            &signature,
+            &signature,
+            msg,
+            &self.repo.find_tree(tree_id)?,
+            &[&parent],
+        )?;
+
         Ok(())
-    });
+    }
 
-    push_options.remote_callbacks(callbacks);
-    origin.push::<String>(
-        &["refs/heads/master:refs/heads/master".to_string()],
-        Some(&mut push_options),
-    )?;
+    pub fn push(&self, github_token: &str) -> Result<(), anyhow::Error> {
+        info!("find origin");
+        let mut origin = self.repo.find_remote("origin")?;
+        info!("push");
+        let mut push_options = PushOptions::new();
+        let mut callbacks = RemoteCallbacks::new();
+        callbacks.credentials(|url, username_from_url, allowed_types| {
+            info!(
+                "credentials callback: {:?}, {:?}, {:?}",
+                url, username_from_url, allowed_types
+            );
+            Cred::userpass_plaintext(github_token, "")
+        });
 
-    pause();
+        callbacks.sideband_progress(|t| {
+            let s = std::str::from_utf8(t).expect("bad string");
+            info!("GIT PROGRESS: {}", s);
+            true
+        });
 
-    Ok(())
+        callbacks.push_update_reference(|s1, s2| {
+            info!("GIT UPDATE: {:?}, {:?}", s1, s2);
+            Ok(())
+        });
+
+        push_options.remote_callbacks(callbacks);
+        origin.push::<String>(
+            &["refs/heads/master:refs/heads/master".to_string()],
+            Some(&mut push_options),
+        )?;
+
+        Ok(())
+    }
 }

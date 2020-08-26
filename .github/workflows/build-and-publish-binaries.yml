@@ -6,60 +6,87 @@ on:
       - created
 
 jobs:
+  check-version:
+    runs-on: ubuntu-latest
+    env:
+      RUST_BACKTRACE: 1
+
+    steps:
+      - name: Checkout sources
+        uses: actions/checkout@v1
+        with:
+          submodules: true
+
+      - name: Install stable toolchain
+        uses: actions-rs/toolchain@v1
+        with:
+          toolchain: stable
+          target: ${{ matrix.target }}
+          override: true
+
+      - name: Check version
+        working-directory: ./package-publisher
+        run: |
+          cargo build
+          ./target/debug/exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version
+
+      - name: Upload package-publisher
+        uses: actions/upload-artifact@v2
+        with:
+          name: package-publisher
+          path: ./package-publisher/target/debug/exogress-package-publisher
+
   build-and-publish:
+    needs: check-version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
-        os:
-          - ubuntu-latest
-        target:
-          - aarch64-unknown-linux-gnu
-          - aarch64-unknown-linux-musl
-          - arm-unknown-linux-gnueabi
-          - arm-unknown-linux-gnueabihf
-          - arm-unknown-linux-musleabi
-          - arm-unknown-linux-musleabihf
-          - armv5te-unknown-linux-gnueabi
-          - armv5te-unknown-linux-musleabi
-          - armv7-unknown-linux-gnueabihf
-          - armv7-unknown-linux-musleabihf
-          - x86_64-unknown-linux-gnu
-          - x86_64-unknown-linux-musl
         include:
           - os: macOS-latest
             target: x86_64-apple-darwin
-            upload_asset_name: exogress-macos-amd64
+            upload_asset_name: exogress-macos-x86_64
+            rustflags: ''
           - os: windows-latest
-            target: i686-pc-windows-msvc
             upload_asset_name: exogress-win32.exe
+            target: i686-pc-windows-msvc
+            rustflags: '-C target-feature=+crt-static'
           - os: windows-latest
             target: x86_64-pc-windows-msvc
             upload_asset_name: exogress-win64.exe
-          - target: aarch64-unknown-linux-gnu
+            rustflags: '-C target-feature=+crt-static'
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-gnu
             upload_asset_name: exogress-linux-aarch64-gnu
-          - target: aarch64-unknown-linux-musl
-            upload_asset_name: exogress-linux-aarch64-musl
-          - target: arm-unknown-linux-gnueabi
+            rustflags: ''
+          - os: ubuntu-latest
+            target: aarch64-unknown-linux-musl
+            upload_asset_name: exogress-linux-aarch64-musl-static
+            rustflags: ''
+          - os: ubuntu-latest
+            target: arm-unknown-linux-gnueabi
             upload_asset_name: exogress-linux-arm-gnueabi
-          - target: arm-unknown-linux-gnueabihf
-            upload_asset_name: exogress-linux-arm-gnueabihf
-          - target: arm-unknown-linux-musleabi
-            upload_asset_name: exogress-linux-arm-musleabi
-          - target: arm-unknown-linux-musleabihf
-            upload_asset_name: exogress-linux-arm-musleabihf
-          - target: armv5te-unknown-linux-gnueabi
-            upload_asset_name: exogress-linux-armv5te-gnueabi
-          - target: armv5te-unknown-linux-musleabi
-            upload_asset_name: exogress-linux-armv5te-musleabi
-          - target: armv7-unknown-linux-gnueabihf
+            rustflags: ''
+          - os: ubuntu-latest
+            target: arm-unknown-linux-musleabi
+            upload_asset_name: exogress-linux-arm-musleabi-static
+            rustflags: ''
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-gnueabihf
             upload_asset_name: exogress-linux-armv7-gnueabihf
-          - target: armv7-unknown-linux-musleabihf
-            upload_asset_name: exogress-linux-armv7-musleabihf
-          - target: x86_64-unknown-linux-gnu
+            rustflags: ''
+          - os: ubuntu-latest
+            target: armv7-unknown-linux-musleabihf
+            upload_asset_name: exogress-linux-armv7-musleabihf-static
+            rustflags: ''
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-gnu
             upload_asset_name: exogress-linux-x86_64-gnu
-          - target: x86_64-unknown-linux-musl
-            upload_asset_name: exogress-linux-x86_64-musl
+            rustflags: ''
+          - os: ubuntu-latest
+            target: x86_64-unknown-linux-musl
+            upload_asset_name: exogress-linux-x86_64-musl-static
+            rustflags: ''
 
     env:
       RUST_BACKTRACE: 1
@@ -67,6 +94,8 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
+        with:
+          submodules: true
 
       - uses: actions/cache@v2
         with:
@@ -83,12 +112,59 @@ jobs:
           target: ${{ matrix.target }}
           override: true
 
+      - name: Check version
+        working-directory: ./package-publisher
+        run: |
+          cargo run -- --version ${{ github.event.release.tag_name }} check_version
+
       - name: Build release binary
         uses: actions-rs/cargo@v1
+        env:
+          RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           use-cross: true
           command: build
           args: --release --target=${{ matrix.target }} -p exogress
+
+      - name: Install cargo-deb
+        uses: actions-rs/cargo@v1
+        if: contains(matrix.target, 'gnu')
+        with:
+          command: install
+          args: cargo-deb
+
+#      - name: Install cargo-rpm
+#        uses: actions-rs/cargo@v1
+#        if: contains(matrix.target, 'gnu')
+#        with:
+#          command: install
+#          args: cargo-rpm
+
+#      - name: Build RPM package
+#        id: pack-rpm
+#        if: contains(matrix.target, 'gnu')
+#        run: |
+#          cargo rpm build --target=${{ matrix.target }} --no-cargo-build
+
+      - name: Build deb package
+        id: pack-deb
+        if: contains(matrix.target, 'gnu')
+        run: |
+          DEB_PATH=$(cargo deb --no-build --target=${{ matrix.target }} --no-strip 2>/dev/null)
+          DEB_FILE=$(basename $DEB_PATH)
+          echo "::set-output name=deb_path::$DEB_PATH"
+          echo "::set-output name=deb_file::$DEB_FILE"
+
+      - name: Upload release deb
+        uses: actions/upload-release-asset@v1.0.2
+        if: contains(matrix.target, 'gnu')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.pack-deb.outputs.deb_path }}
+          asset_name: ${{ steps.pack-deb.outputs.deb_file }}
+          asset_content_type: application/octet-stream
 
       - name: Upload release binary (non-Windows)
         uses: actions/upload-release-asset@v1.0.2
@@ -109,13 +185,12 @@ jobs:
         with:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ./target/${{ matrix.target }}/release/exogress.exe
-          asset_name: ${{ matrix.upload_asset_name }}.exe
+          asset_name: ${{ matrix.upload_asset_name }}
           asset_content_type: application/octet-stream
 
-      - name: Compress MacOS binary for homebrew
+      - name: Compress linux binary for homebrew
         uses: master-atul/tar-action@v1.0.2
-        id: compress
-        if: matrix.target == 'macOS-latest'
+        if: matrix.upload_asset_name == 'exogress-linux-x86_64-musl-static'
         with:
           command: c
           cwd: ./target/${{ matrix.target }}/release/
@@ -123,9 +198,9 @@ jobs:
             exogress
           outPath: ${{ matrix.upload_asset_name }}.tar.gz
 
-      - name: Upload MacOS compressed releas for homebrew
+      - name: Upload linux compressed release for homebrew
         uses: actions/upload-release-asset@v1.0.2
-        if: matrix.target == 'macOS-latest'
+        if: matrix.upload_asset_name == 'exogress-linux-x86_64-musl-static'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         with:
@@ -134,7 +209,28 @@ jobs:
           asset_name: ${{ matrix.upload_asset_name }}.tar.gz
           asset_content_type: application/gzip
 
-  publish-homebrew:
+      - name: Compress MacOS binary for homebrew
+        uses: master-atul/tar-action@v1.0.2
+        if: matrix.upload_asset_name == 'exogress-macos-x86_64'
+        with:
+          command: c
+          cwd: ./target/${{ matrix.target }}/release/
+          files: |
+            exogress
+          outPath: ${{ matrix.upload_asset_name }}.tar.gz
+
+      - name: Upload MacOS compressed release for homebrew
+        uses: actions/upload-release-asset@v1.0.2
+        if: matrix.upload_asset_name == 'exogress-macos-x86_64'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ./${{ matrix.upload_asset_name }}.tar.gz
+          asset_name: ${{ matrix.upload_asset_name }}.tar.gz
+          asset_content_type: application/gzip
+
+  publish:
     runs-on: ubuntu-latest
     needs: build-and-publish
     env:
@@ -142,24 +238,40 @@ jobs:
     steps:
       - name: Checkout sources
         uses: actions/checkout@v1
-
-      - uses: actions/cache@v2
         with:
-          path: |
-            ~/.cargo/registry
-            ~/.cargo/git
-            target
-          key: ${{ runner.os }}-pckage-publisher-cargo-${{ hashFiles('pckage-publisher/Cargo.lock') }}
+          submodules: true
 
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
+      - name: Download package-publisher
+        uses: actions/download-artifact@v2
         with:
-          toolchain: stable
+          name: package-publisher
+          path: ./package-publisher
 
-      - name: Publish packages
-        uses: actions-rs/cargo@v1
+      - name: Import GPG key
+        id: import_gpg
+        uses: crazy-max/ghaction-import-gpg@v2
+        env:
+          GPG_PRIVATE_KEY: ${{ secrets.GPG_PRIVATE_KEY }}
+          PASSPHRASE: ${{ secrets.GPG_PASSPHRASE }}
+
+      - name: GPG user IDs
+        run: |
+          echo "fingerprint: ${{ steps.import_gpg.outputs.fingerprint }}"
+          echo "keyid:       ${{ steps.import_gpg.outputs.keyid }}"
+          echo "name:        ${{ steps.import_gpg.outputs.name }}"
+          echo "email:       ${{ steps.import_gpg.outputs.email }}"
+
+      - name: Publish APT packages
+        working-directory: ./package-publisher
         env:
           GITHUB_TOKEN: ${{ secrets.PAT }}
-        with:
-          command: run
-          args: -- --homebrew --version ${{ github.event.release.tag_name }} --message "Release new version"
+        run: |
+          sudo apt install -y apt-utils
+          chmod +x ./exogress-package-publisher
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} publish --message "Release new version" --gpg-key-id=${{ steps.import_gpg.outputs.keyid }}
+
+      - name: Build and publish docker images
+        working-directory: ./package-publisher
+        run: |
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:20.04 | docker build -t exogress:ubuntu-${{ github.event.release.tag_name }} -
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t exogress:buster-${{ github.event.release.tag_name }} -
