@@ -15,11 +15,14 @@ use semver::Version;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
 use std::io::Write;
+use std::time::Duration;
 use tokio;
 use tokio::process::Command;
+use tokio::time::{delay_for, timeout};
 use tracing::Level;
 use url::Url;
 
+const DEB_ARCHS: [&str; 4] = ["amd64", "arm64", "armel", "armhf"];
 const TEMPLATES_DIR: Dir = include_dir!("templates");
 
 const HOMEBREW_FILE: &str = "exogress.rb";
@@ -266,7 +269,7 @@ async fn main() {
         let apt_repo =
             Repo::new("https://github.com/exogress/apt-repo.git".parse().unwrap()).unwrap();
 
-        for arch in &["amd64", "arm64", "armel", "armhf"] {
+        for arch in &DEB_ARCHS {
             let deb_version = version_string.replace('-', ".");
             let url: Url = format!(
                 "https://github.com/exogress/cli/releases/download/v{version}/exogress_{deb_version}_{arch}.deb",
@@ -382,6 +385,43 @@ async fn main() {
             .unwrap();
 
         apt_repo.push(github_token).unwrap();
-        homebrew_repo.push(github_token).unwrap()
+        homebrew_repo.push(github_token).unwrap();
+
+        let try_download = async move {
+            for arch in &DEB_ARCHS {
+                let deb_version = version_string.replace('-', ".");
+                let url: Url = format!(
+                    "https://apt.exogress.com/exogress_{deb_version}_{arch}.deb",
+                    deb_version = deb_version,
+                    arch = arch
+                )
+                .parse()
+                .unwrap();
+                loop {
+                    match reqwest::Client::new().head(url.clone()).send().await {
+                        Ok(resp) => {
+                            if resp.status().is_success() {
+                                info!("{} found", url);
+                                break;
+                            } else {
+                                warn!("{} still not found", url);
+                            }
+                        }
+                        Err(e) => {
+                            warn!("{} error: {}", url, e);
+                        }
+                    }
+                    delay_for(Duration::from_secs(5)).await;
+                }
+            }
+        };
+
+        if timeout(Duration::from_secs(200), try_download)
+            .await
+            .is_err()
+        {
+            error!("Failed to wait for deb packages to appear");
+            process::exit(-1);
+        };
     }
 }
