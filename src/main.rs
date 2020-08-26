@@ -101,7 +101,7 @@ pub fn main() {
         &mut args, &matches, "exogress",
     );
 
-    if let Some(_) = matches.subcommand_matches("init") {
+    if matches.subcommand_matches("init").is_some() {
         init::create_exofile(".").expect("Could not init");
 
         std::process::exit(0);
