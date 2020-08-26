@@ -400,12 +400,11 @@ async fn main() {
                 loop {
                     match reqwest::Client::new().head(url.clone()).send().await {
                         Ok(resp) => {
-                            info!("resp status = {}", resp.status());
                             if resp.status().is_success() {
                                 info!("{} found", url);
                                 break;
                             } else {
-                                warn!("{} still not found", url);
+                                warn!("{} still not found: {}", url, resp.status());
                             }
                         }
                         Err(e) => {
