@@ -26,14 +26,14 @@ pub fn main() {
         .about("spawn exogress client")
         .arg(
             Arg::with_name("command")
-                .about("Run this command")
+                .help("Run this command")
                 .last(true)
                 .multiple(true),
         )
         .arg(
             Arg::with_name("no_watch_config")
                 .long("no-watch")
-                .about("Don't watch for config changes")
+                .help("Don't watch for config changes")
                 .takes_value(false)
                 .required(false),
         )
@@ -41,7 +41,7 @@ pub fn main() {
             Arg::with_name("client_id")
                 .long("client-id")
                 .value_name("ULID")
-                .about("CLIENT_ID")
+                .help("CLIENT_ID")
                 .env("EXG_CLIENT_ID")
                 .hide_env_values(true)
                 .required(true)
@@ -51,7 +51,7 @@ pub fn main() {
             Arg::with_name("client_secret")
                 .long("client-secret")
                 .value_name("STRING")
-                .about("CLIENT_SECRET")
+                .help("CLIENT_SECRET")
                 .env("EXG_CLIENT_SECRET")
                 .hide_env_values(true)
                 .required(true)
@@ -61,7 +61,7 @@ pub fn main() {
             Arg::with_name("account")
                 .long("account")
                 .value_name("STRING")
-                .about("Account")
+                .help("Account")
                 .required(true)
                 .takes_value(true),
         )
@@ -69,7 +69,7 @@ pub fn main() {
             Arg::with_name("project")
                 .long("project")
                 .value_name("STRING")
-                .about("Project")
+                .help("Project")
                 .required(true)
                 .takes_value(true),
         );
@@ -80,10 +80,10 @@ pub fn main() {
         .about("Expose your app to Exogress cloud load balancer")
         .arg(
             Arg::with_name("config")
-                .short('c')
+                .short("c")
                 .long("config")
                 .value_name("FILE")
-                .about("Sets a custom config file")
+                .help("Sets a custom config file")
                 .env("EXG_CONFIG_FILE")
                 .default_value(DEFAULT_CONFIG_FILE)
                 .takes_value(true),
