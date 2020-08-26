@@ -51,7 +51,7 @@ async fn main() {
     let matches = App::new("Exogress Publisher")
         .version(crate_version!())
         .author("Exogress Team <team@exogress.com>")
-        .help("Publish exogress binaries to package repositories")
+        .about("Publish exogress binaries to package repositories")
         .arg(
             Arg::with_name("version")
                 .help("version")
