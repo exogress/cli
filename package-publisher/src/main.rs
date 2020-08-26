@@ -177,7 +177,7 @@ async fn main() {
             .expect("cargo_toml not set")
             .to_string();
 
-        info!("Using cargo.toml at {}", cargo_toml_path);
+        eprintln!("Using cargo.toml at {}", cargo_toml_path);
         let content = fs::read(cargo_toml_path).unwrap();
         let parsed = toml::from_slice::<toml::Value>(content.as_ref()).unwrap();
         let pkg_version = parsed["package"]["version"]
@@ -185,11 +185,13 @@ async fn main() {
             .expect("No version in Cargo.toml")
             .to_string();
         if pkg_version != version_string {
-            error!("{} != {}", pkg_version, version_string);
+            eprintln!("{} != {}", pkg_version, version_string);
             process::exit(1);
         } else {
-            info!("versions match");
+            eprintln!("versions match");
         }
+
+        println!("{}", version_string);
 
         process::exit(0);
     }

@@ -270,8 +270,17 @@ jobs:
           chmod +x ./exogress-package-publisher
           ./exogress-package-publisher --version ${{ github.event.release.tag_name }} publish --message "Release new version" --gpg-key-id=${{ steps.import_gpg.outputs.keyid }}
 
+      - name: Login to DockerHub
+        uses: crazy-max/ghaction-docker-login@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
       - name: Build and publish docker images
         working-directory: ./package-publisher
         run: |
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:20.04 | docker build -t exogress:ubuntu-${{ github.event.release.tag_name }} -
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t exogress:buster-${{ github.event.release.tag_name }} -
+          VERSION=$(./exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version 2>/dev/null)
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:20.04 | docker build -t glebpom/exogress:ubuntu-$VERSION -
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t glebpom/exogress:buster-$VERSION -
+          docker push glebpom/exogress:ubuntu-$VERSION
+          docker push glebpom/exogress:buster-$VERSION
