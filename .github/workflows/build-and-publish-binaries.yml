@@ -280,7 +280,20 @@ jobs:
         working-directory: ./package-publisher
         run: |
           VERSION=$(./exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version 2>/dev/null)
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:20.04 | docker build -t glebpom/exogress:ubuntu-$VERSION -
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t glebpom/exogress:buster-$VERSION -
-          docker push glebpom/exogress:ubuntu-$VERSION
-          docker push glebpom/exogress:buster-$VERSION
+          DOCKER_IMAGE=glebpom/exogress
+
+          docker pull ubuntu:focal
+          docker pull debian:buster
+
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | docker build -t $DOCKER_IMAGE:$VERSION-focal -
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t $DOCKER_IMAGE:$VERSION-buster -
+
+          docker tag $DOCKER_IMAGE:$VERSION-focal $DOCKER_IMAGE:latest-focal
+          docker tag $DOCKER_IMAGE:$VERSION-buster $DOCKER_IMAGE:latest-buster
+          docker tag $DOCKER_IMAGE:$VERSION-buster $DOCKER_IMAGE:latest
+
+          docker push $DOCKER_IMAGE:$VERSION-focal
+          docker push $DOCKER_IMAGE:$VERSION-buster
+          docker push $DOCKER_IMAGE:latest-focal
+          docker push $DOCKER_IMAGE:latest-buster
+          docker push $DOCKER_IMAGE:latest
