@@ -97,13 +97,13 @@ jobs:
         with:
           submodules: true
 
-#      - uses: actions/cache@v2
-#        with:
-#          path: |
-#            ~/.cargo/registry
-#            ~/.cargo/git
-#            target
-#          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      #      - uses: actions/cache@v2
+      #        with:
+      #          path: |
+      #            ~/.cargo/registry
+      #            ~/.cargo/git
+      #            target
+      #          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -133,18 +133,18 @@ jobs:
           command: install
           args: cargo-deb
 
-#      - name: Install cargo-rpm
-#        uses: actions-rs/cargo@v1
-#        if: contains(matrix.target, 'gnu')
-#        with:
-#          command: install
-#          args: cargo-rpm
+      #      - name: Install cargo-rpm
+      #        uses: actions-rs/cargo@v1
+      #        if: contains(matrix.target, 'gnu')
+      #        with:
+      #          command: install
+      #          args: cargo-rpm
 
-#      - name: Build RPM package
-#        id: pack-rpm
-#        if: contains(matrix.target, 'gnu')
-#        run: |
-#          cargo rpm build --target=${{ matrix.target }} --no-cargo-build
+      #      - name: Build RPM package
+      #        id: pack-rpm
+      #        if: contains(matrix.target, 'gnu')
+      #        run: |
+      #          cargo rpm build --target=${{ matrix.target }} --no-cargo-build
 
       - name: Build deb package
         id: pack-deb
@@ -276,24 +276,24 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_PASSWORD }}
 
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v3
+        with:
+          buildx-version: latest
+          qemu-version: latest
+
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+
       - name: Build and publish docker images
         working-directory: ./package-publisher
         run: |
           VERSION=$(./exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version 2>/dev/null)
           DOCKER_IMAGE=glebpom/exogress
 
-          docker pull ubuntu:focal
-          docker pull debian:buster
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
+            docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:$VERSION-focal -t $DOCKER_IMAGE:latest-focal --push -
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | \
+            docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:$VERSION-buster -t $DOCKER_IMAGE:latest-buster -t $DOCKER_IMAGE:latest --push -
 
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | docker build -t $DOCKER_IMAGE:$VERSION-focal -
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t $DOCKER_IMAGE:$VERSION-buster -
-
-          docker tag $DOCKER_IMAGE:$VERSION-focal $DOCKER_IMAGE:latest-focal
-          docker tag $DOCKER_IMAGE:$VERSION-buster $DOCKER_IMAGE:latest-buster
-          docker tag $DOCKER_IMAGE:$VERSION-buster $DOCKER_IMAGE:latest
-
-          docker push $DOCKER_IMAGE:$VERSION-focal
-          docker push $DOCKER_IMAGE:$VERSION-buster
-          docker push $DOCKER_IMAGE:latest-focal
-          docker push $DOCKER_IMAGE:latest-buster
-          docker push $DOCKER_IMAGE:latest
