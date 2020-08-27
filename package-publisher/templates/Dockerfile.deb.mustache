@@ -7,6 +7,7 @@ ENV EXOGRESS_VERSION {{ DEB_VERSION }}
 RUN set -x && \
     apt-get update && \
     apt-get install --no-install-recommends --no-install-suggests -y gnupg ca-certificates curl && \
+    curl -v https://apt.exogress.com/KEY.gpg && \
     curl -s https://apt.exogress.com/KEY.gpg | apt-key add - && \
     echo "deb https://apt.exogress.com/ /" > /etc/apt/sources.list.d/exogress.list && \
     apt update && \
