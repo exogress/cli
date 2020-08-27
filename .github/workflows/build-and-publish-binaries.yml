@@ -97,13 +97,13 @@ jobs:
         with:
           submodules: true
 
-#      - uses: actions/cache@v2
-#        with:
-#          path: |
-#            ~/.cargo/registry
-#            ~/.cargo/git
-#            target
-#          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      #      - uses: actions/cache@v2
+      #        with:
+      #          path: |
+      #            ~/.cargo/registry
+      #            ~/.cargo/git
+      #            target
+      #          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -133,18 +133,18 @@ jobs:
           command: install
           args: cargo-deb
 
-#      - name: Install cargo-rpm
-#        uses: actions-rs/cargo@v1
-#        if: contains(matrix.target, 'gnu')
-#        with:
-#          command: install
-#          args: cargo-rpm
+      #      - name: Install cargo-rpm
+      #        uses: actions-rs/cargo@v1
+      #        if: contains(matrix.target, 'gnu')
+      #        with:
+      #          command: install
+      #          args: cargo-rpm
 
-#      - name: Build RPM package
-#        id: pack-rpm
-#        if: contains(matrix.target, 'gnu')
-#        run: |
-#          cargo rpm build --target=${{ matrix.target }} --no-cargo-build
+      #      - name: Build RPM package
+      #        id: pack-rpm
+      #        if: contains(matrix.target, 'gnu')
+      #        run: |
+      #          cargo rpm build --target=${{ matrix.target }} --no-cargo-build
 
       - name: Build deb package
         id: pack-deb
@@ -270,8 +270,28 @@ jobs:
           chmod +x ./exogress-package-publisher
           ./exogress-package-publisher --version ${{ github.event.release.tag_name }} publish --message "Release new version" --gpg-key-id=${{ steps.import_gpg.outputs.keyid }}
 
+      - name: Login to DockerHub
+        uses: crazy-max/ghaction-docker-login@v1
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+
+      - name: Set up Docker Buildx
+        id: buildx
+        uses: crazy-max/ghaction-docker-buildx@v3
+        with:
+          buildx-version: latest
+          qemu-version: latest
+
+      - name: Available platforms
+        run: echo ${{ steps.buildx.outputs.platforms }}
+
       - name: Build and publish docker images
         working-directory: ./package-publisher
         run: |
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:20.04 | docker build -t exogress:ubuntu-${{ github.event.release.tag_name }} -
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=debian:buster | docker build -t exogress:buster-${{ github.event.release.tag_name }} -
+          VERSION=$(./exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version 2>/dev/null)
+          DOCKER_IMAGE=glebpom/exogress
+
+          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
+            docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:$VERSION-focal -t $DOCKER_IMAGE:latest-focal -t $DOCKER_IMAGE:latest  --push --pull -
+
