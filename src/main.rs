@@ -9,7 +9,7 @@ use std::process::Stdio;
 
 use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
-use exogress_client_core::Client;
+use exogress_client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
 use exogress_common_utils::termination::stop_signal_listener;
 use exogress_entities::{InstanceId, Ulid};
 use futures::future::Either;
@@ -21,16 +21,11 @@ use tokio::runtime::{Builder, Handle};
 
 use exogress_config_core::DEFAULT_CONFIG_FILE;
 use trust_dns_resolver::TokioAsyncResolver;
+use url::Url;
 
 pub fn main() {
     let spawn_args = App::new("spawn")
         .about("spawn exogress client")
-        .arg(
-            Arg::with_name("command")
-                .help("Run this command")
-                .last(true)
-                .multiple(true),
-        )
         .arg(
             Arg::with_name("no_watch_config")
                 .long("no-watch")
@@ -45,6 +40,17 @@ pub fn main() {
                 .help("CLIENT_ID")
                 .env("EXG_CLIENT_ID")
                 .hide_env_values(true)
+                .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("cloud_endpoint")
+                .long("cloud-endpoint")
+                .value_name("URL")
+                .help("Cloud endpoint")
+                .env("EXG_CLOUD_ENDPOINT")
+                .default_value(DEFAULT_CLOUD_ENDPOINT)
+                .hidden(true)
                 .required(true)
                 .takes_value(true),
         )
@@ -73,6 +79,12 @@ pub fn main() {
                 .help("Project")
                 .required(true)
                 .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("command")
+                .help("Run this command")
+                .last(true)
+                .multiple(true),
         );
 
     let args = App::new("Exogress CLI")
@@ -110,6 +122,12 @@ pub fn main() {
     let spawn_matches = matches
         .subcommand_matches("spawn")
         .expect("unknown subcommand");
+
+    let cloud_endpoint: Url = spawn_matches
+        .value_of("cloud_endpoint")
+        .expect("cloud_endpoint is not set")
+        .parse()
+        .expect("cloud_endpoint is not Url");
 
     exogress_common_utils::clap::log::handle(&spawn_matches, "exogress");
     let num_threads = exogress_common_utils::clap::threads::extract_matches(&spawn_matches);
@@ -221,6 +239,7 @@ pub fn main() {
             .config_path(config_path)
             .client_id(client_id)
             .client_secret(client_secret)
+            .cloud_endpoint(cloud_endpoint.to_string())
             .account(account)
             .project(project)
             .instance_id(instance_id)
