@@ -43,7 +43,7 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: macOS-latest
+          - os: macos-latest
             target: x86_64-apple-darwin
             upload_asset_name: exogress-macos-x86_64
             rustflags: ''
@@ -97,13 +97,13 @@ jobs:
         with:
           submodules: true
 
-      #      - uses: actions/cache@v2
-      #        with:
-      #          path: |
-      #            ~/.cargo/registry
-      #            ~/.cargo/git
-      #            target
-      #          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
+      - uses: actions/cache@v2
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: ${{ runner.os }}-${{ matrix.target }}-cargo-${{ hashFiles('**/Cargo.lock') }}
 
       - name: Install stable toolchain
         uses: actions-rs/toolchain@v1
@@ -229,6 +229,14 @@ jobs:
           asset_path: ./${{ matrix.upload_asset_name }}.tar.gz
           asset_name: ${{ matrix.upload_asset_name }}.tar.gz
           asset_content_type: application/gzip
+
+      # Workaround for actions/cache#403 (https://github.com/actions/cache/issues/403)
+      #
+      # rust-lang/cargo#8603 has the exact bug that we run into
+      # (https://github.com/rust-lang/cargo/issues/8603)
+      - name: Flush the disk cache for macOS
+        if: matrix.os == 'macos-latest'
+        run: sudo /usr/sbin/purge
 
   publish:
     runs-on: ubuntu-latest
