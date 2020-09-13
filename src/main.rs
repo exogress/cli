@@ -11,7 +11,7 @@ use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
 use exogress_client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
 use exogress_common_utils::termination::stop_signal_listener;
-use exogress_entities::{InstanceId, Ulid};
+use exogress_entities::{InstanceId, LabelName, LabelValue, Ulid};
 use futures::future::Either;
 use futures::{future, select_biased, FutureExt};
 use stop_handle::stop_handle;
@@ -20,6 +20,8 @@ use tokio::process::Command;
 use tokio::runtime::{Builder, Handle};
 
 use exogress_config_core::DEFAULT_CONFIG_FILE;
+use hashbrown::HashMap;
+use std::str::FromStr;
 use trust_dns_resolver::TokioAsyncResolver;
 use url::Url;
 
@@ -78,6 +80,16 @@ pub fn main() {
                 .value_name("STRING")
                 .help("Project")
                 .required(true)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("label")
+                .long("label")
+                .short("l")
+                .value_name("KEY=VALUE")
+                .help("Attach label to running instance")
+                .multiple(true)
+                .required(false)
                 .takes_value(true),
         )
         .arg(
@@ -167,6 +179,27 @@ pub fn main() {
         .expect("project is not set")
         .to_string();
 
+    let labels = spawn_matches
+        .values_of("label")
+        .map(|v| {
+            v.into_iter().map(|v| {
+                let mut kv = v.split("=");
+                let k = kv.next().expect("bad label format");
+                let v = kv.next().expect("bad label format");
+                assert!(kv.next().is_none(), "bad label format");
+                let expanded_v = shellexpand::env(v).expect("Could not expand value");
+                (
+                    LabelName::from_str(k).expect("bad label name format"),
+                    LabelValue::from_str(&expanded_v).expect("bad label value"),
+                )
+            })
+        })
+        .into_iter()
+        .flatten()
+        .collect::<HashMap<LabelName, LabelValue>>();
+
+    info!("labels = {:?}", labels);
+
     let (app_stop_handle, app_stop_wait) = stop_handle::<StopReason>();
 
     let instance_id = InstanceId::new();
@@ -244,6 +277,7 @@ pub fn main() {
             .project(project)
             .instance_id(instance_id)
             .watch_config(should_watch_config)
+            .labels(labels)
             .build()
             .unwrap()
             .spawn(resolver)
