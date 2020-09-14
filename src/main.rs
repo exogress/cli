@@ -11,7 +11,7 @@ use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
 use exogress_client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
 use exogress_common_utils::termination::stop_signal_listener;
-use exogress_entities::{InstanceId, LabelName, LabelValue, Ulid};
+use exogress_entities::{LabelName, LabelValue, Ulid};
 use futures::future::Either;
 use futures::{future, select_biased, FutureExt};
 use stop_handle::stop_handle;
@@ -202,10 +202,6 @@ pub fn main() {
 
     let (app_stop_handle, app_stop_wait) = stop_handle::<StopReason>();
 
-    let instance_id = InstanceId::new();
-
-    info!("Using instance_id {}", instance_id);
-
     rt.block_on(async move {
         tokio::spawn(stop_signal_listener(app_stop_handle.clone()));
 
@@ -275,7 +271,6 @@ pub fn main() {
             .cloud_endpoint(cloud_endpoint.to_string())
             .account(account)
             .project(project)
-            .instance_id(instance_id)
             .watch_config(should_watch_config)
             .labels(labels)
             .build()
