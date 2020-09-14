@@ -36,11 +36,11 @@ pub fn main() {
                 .required(false),
         )
         .arg(
-            Arg::with_name("client_id")
+            Arg::with_name("access_key_id")
                 .long("client-id")
                 .value_name("ULID")
                 .help("CLIENT_ID")
-                .env("EXG_CLIENT_ID")
+                .env("EXG_ACCESS_KEY_ID")
                 .hide_env_values(true)
                 .required(true)
                 .takes_value(true),
@@ -57,11 +57,11 @@ pub fn main() {
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("client_secret")
+            Arg::with_name("secret_access_key")
                 .long("client-secret")
                 .value_name("STRING")
                 .help("CLIENT_SECRET")
-                .env("EXG_CLIENT_SECRET")
+                .env("EXG_SECRET_ACCESS_KEY")
                 .hide_env_values(true)
                 .required(true)
                 .takes_value(true),
@@ -158,15 +158,15 @@ pub fn main() {
         .to_string();
     let should_watch_config = !spawn_matches.is_present("no_watch_config");
 
-    let client_id: Ulid = spawn_matches
-        .value_of("client_id")
-        .expect("client_id is not set")
+    let access_key_id: Ulid = spawn_matches
+        .value_of("access_key_id")
+        .expect("access_key_id is not set")
         .parse()
-        .expect("client_id is not ULID");
+        .expect("access_key_id is not ULID");
 
-    let client_secret = spawn_matches
-        .value_of("client_secret")
-        .expect("client_secret is not set")
+    let secret_access_key = spawn_matches
+        .value_of("secret_access_key")
+        .expect("secret_access_key is not set")
         .to_string();
 
     let account = spawn_matches
@@ -266,8 +266,8 @@ pub fn main() {
 
         let client = Client::builder()
             .config_path(config_path)
-            .client_id(client_id)
-            .client_secret(client_secret)
+            .access_key_id(access_key_id)
+            .secret_access_key(secret_access_key)
             .cloud_endpoint(cloud_endpoint.to_string())
             .account(account)
             .project(project)
