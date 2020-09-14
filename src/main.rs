@@ -37,9 +37,9 @@ pub fn main() {
         )
         .arg(
             Arg::with_name("access_key_id")
-                .long("client-id")
+                .long("access-key-id")
                 .value_name("ULID")
-                .help("CLIENT_ID")
+                .help("ACCESS_KEY_ID")
                 .env("EXG_ACCESS_KEY_ID")
                 .hide_env_values(true)
                 .required(true)
@@ -58,9 +58,9 @@ pub fn main() {
         )
         .arg(
             Arg::with_name("secret_access_key")
-                .long("client-secret")
+                .long("secret-access-key")
                 .value_name("STRING")
-                .help("CLIENT_SECRET")
+                .help("SECRET_ACCESS_KEY")
                 .env("EXG_SECRET_ACCESS_KEY")
                 .hide_env_values(true)
                 .required(true)
