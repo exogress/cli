@@ -182,8 +182,8 @@ pub fn main() {
     let labels = spawn_matches
         .values_of("label")
         .map(|v| {
-            v.into_iter().map(|v| {
-                let mut kv = v.split("=");
+            v.map(|v| {
+                let mut kv = v.split('=');
                 let k = kv.next().expect("bad label format");
                 let v = kv.next().expect("bad label format");
                 assert!(kv.next().is_none(), "bad label format");
