@@ -2151,9 +2151,9 @@ checksum = "fbee7696b84bbf3d89a1c2eccff0850e3047ed46bfcd2e92c29a2d074d57e252"
 
 [[package]]
 name = "smartstring"
-version = "0.2.4"
+version = "0.2.5"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "938800f206ac06b91f147db8f7514846ddc16cf46034eb1af59ca6f286cf5690"
+checksum = "5579edba9651e6b9ccf0d516c4457521a149dadeb77e88b03eb1ae3183fe180a"
 dependencies = [
  "serde",
  "static_assertions",
