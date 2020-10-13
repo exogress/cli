@@ -1,4 +1,4 @@
-FROM rust:1.45.2
+FROM rust:1.47
 
 RUN apt update && apt install -y apt-utils
 
