@@ -279,10 +279,11 @@ jobs:
           ./exogress-package-publisher --version ${{ github.event.release.tag_name }} publish --message "Release new version" --gpg-key-id=${{ steps.import_gpg.outputs.keyid }}
 
       - name: Login to DockerHub
-        uses: crazy-max/ghaction-docker-login@v1
+        uses: docker/login-action@v1
         with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_PASSWORD }}
+          registry: quay.io
+          username: ${{ secrets.QUAY_USERNAME }}
+          password: ${{ secrets.QUAY_PASSWORD }}
 
       - name: Set up Docker Buildx
         id: buildx
@@ -298,7 +299,7 @@ jobs:
         working-directory: ./package-publisher
         run: |
           VERSION=$(./exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version 2>/dev/null)
-          DOCKER_IMAGE=glebpom/exogress
+          DOCKER_IMAGE=quay.io/exogress/exogress
 
           ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
             docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:$VERSION-focal -t $DOCKER_IMAGE:latest-focal -t $DOCKER_IMAGE:latest  --push --pull -
