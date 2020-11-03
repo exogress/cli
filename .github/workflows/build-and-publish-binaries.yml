@@ -265,6 +265,7 @@ jobs:
           echo "email:       ${{ steps.import_gpg.outputs.email }}"
 
       - run: 'echo "$GCE_UPLOAD_BUCKET_CREDENTIALS" > ./gce-key.json'
+        working-directory: ./package-publisher
         shell: bash
         env:
           GCE_UPLOAD_BUCKET_CREDENTIALS: ${{secrets.GCE_UPLOAD_BUCKET_CREDENTIALS}}
