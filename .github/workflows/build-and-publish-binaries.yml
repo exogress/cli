@@ -302,11 +302,10 @@ jobs:
           DOCKER_IMAGE=quay.io/exogress/exogress
 
           ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
-            docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:$VERSION-focal --push --pull -
+            docker buildx build --driver docker-container --driver-opt image=moby/buildkit:master\
+            --platform linux/arm,linux/arm64,linux/amd64 \
+            -t $DOCKER_IMAGE:$VERSION-focal \
+            -t $DOCKER_IMAGE:latest-focal \
+            -t $DOCKER_IMAGE:latest --push --pull -
 
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
-            docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:latest-focal --push --pull -
-
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
-            docker buildx build --platform linux/arm,linux/arm64,linux/amd64 -t $DOCKER_IMAGE:latest --push --pull -
 
