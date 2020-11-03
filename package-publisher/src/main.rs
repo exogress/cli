@@ -376,9 +376,9 @@ async fn main() {
             .await
             .expect("could not create deb file in apt bucket");
 
-        rustyline::Editor::<()>::new()
-            .readline("Press to continue")
-            .unwrap();
+        // rustyline::Editor::<()>::new()
+        //     .readline("Press to continue")
+        //     .unwrap();
 
         let release_gpg = Command::new("gpg")
             .arg("--default-key")
