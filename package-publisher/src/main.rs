@@ -8,16 +8,20 @@ use std::{env, fs, process};
 
 use crate::git::Repo;
 use clap::{crate_version, App, Arg, SubCommand};
+use cloud_storage::{Bucket, Object};
 use flate2::{Compression, GzBuilder};
 use hex;
 use reqwest;
 use semver::Version;
 use sha2::{Digest, Sha256};
 use std::collections::HashMap;
+use std::fs::File;
 use std::io::Write;
 use std::time::Duration;
+use tempfile::TempDir;
 use tokio;
 use tokio::process::Command;
+use tokio::stream::StreamExt;
 use tokio::time::{delay_for, timeout};
 use tracing::Level;
 use url::Url;
@@ -265,9 +269,28 @@ async fn main() {
             .commit(format!("{}: {}", version, additional_message).as_str())
             .unwrap();
 
-        info!("sync apt repo");
-        let apt_repo =
-            Repo::new("https://github.com/exogress/apt-repo.git".parse().unwrap()).unwrap();
+        info!("upload apt files");
+        const APT_BUCKET: &str = "exogress-apt";
+        let bucket_dir = TempDir::new().unwrap();
+        let mut all_objects = Box::pin(
+            Object::list(APT_BUCKET)
+                .await
+                .expect("cannot retrieve apt packets"),
+        );
+
+        while let Some(objects_res) = all_objects.next().await {
+            let objects = objects_res.unwrap();
+            for object in &objects {
+                let object_name = object.name.clone();
+                let content = Object::download(APT_BUCKET, object_name.as_str())
+                    .await
+                    .unwrap();
+                let mut p = bucket_dir.path().to_owned();
+                p.push(object_name.as_str());
+                let mut file = File::create(p).unwrap();
+                file.write_all(&content).unwrap();
+            }
+        }
 
         for arch in &DEB_ARCHS {
             let deb_version = version_string.replace('-', ".");
@@ -284,15 +307,26 @@ async fn main() {
                 .next()
                 .unwrap()
                 .to_string();
-            let out_filepath = apt_repo.path().join(&filename);
-            info!("{} => {}", url, out_filepath.to_str().unwrap());
             let content = fetch_archive(url.as_str()).await;
-            apt_repo.add_file(filename, content.as_slice()).unwrap();
+            let mut p = bucket_dir.path().to_owned();
+            p.push(filename.clone());
+
+            let mut file = File::create(p).unwrap();
+            file.write_all(&content).unwrap();
+
+            Object::create(
+                APT_BUCKET,
+                content,
+                filename.as_str(),
+                "application/octet-stream",
+            )
+            .await
+            .expect("could not create deb file in apt bucket");
         }
 
-        info!("path = {}", apt_repo.path().to_str().unwrap());
+        info!("path = {}", bucket_dir.path().to_str().unwrap());
 
-        env::set_current_dir(apt_repo.path().to_str().unwrap()).unwrap();
+        env::set_current_dir(bucket_dir.path().to_str().unwrap()).unwrap();
 
         let output_gen_packages = Command::new("apt-ftparchive")
             .arg("packages")
@@ -301,17 +335,18 @@ async fn main() {
             .await
             .unwrap();
 
-        // rustyline::Editor::<()>::new()
-        //     .readline("Press to continue")
-        //     .unwrap();
-
         assert!(output_gen_packages.status.success());
         let packages_content = output_gen_packages.stdout;
 
         info!("write Packages...");
-        apt_repo
-            .add_file("Packages", packages_content.clone().as_slice())
-            .unwrap();
+        Object::create(
+            APT_BUCKET,
+            packages_content.clone(),
+            "Packages",
+            "text/plain",
+        )
+        .await
+        .expect("could not create deb file in apt bucket");
 
         {
             info!("write Packages.gz...");
@@ -323,7 +358,9 @@ async fn main() {
             gz.write_all(packages_content.as_ref()).unwrap();
             gz.finish().unwrap();
 
-            apt_repo.add_file("Packages.gz", f.as_slice()).unwrap();
+            Object::create(APT_BUCKET, f, "Packages.gz", "application/gzip")
+                .await
+                .expect("could not create deb file in apt bucket");
         }
 
         let output_release = Command::new("apt-ftparchive")
@@ -335,8 +372,12 @@ async fn main() {
         assert!(output_gen_packages.status.success());
 
         info!("write Release...");
-        apt_repo
-            .add_file("Release", output_release.stdout.as_slice())
+        Object::create(APT_BUCKET, output_release.stdout, "Release", "text/plain")
+            .await
+            .expect("could not create deb file in apt bucket");
+
+        rustyline::Editor::<()>::new()
+            .readline("Press to continue")
             .unwrap();
 
         let release_gpg = Command::new("gpg")
@@ -345,23 +386,28 @@ async fn main() {
             .arg("-abs")
             .arg("-o")
             .arg("-")
-            .arg(apt_repo.path().join("Release"))
+            .arg(bucket_dir.path().join("Release"))
             .output()
             .await
             .unwrap();
-        // info!(
-        //     "STDOUT: {}",
-        //     std::str::from_utf8(release_gpg.stdout.as_ref()).unwrap()
-        // );
-        // info!(
-        //     "STDERR: {}",
-        //     std::str::from_utf8(release_gpg.stderr.as_ref()).unwrap()
-        // );
+        info!(
+            "STDOUT: {}",
+            std::str::from_utf8(release_gpg.stdout.as_ref()).unwrap()
+        );
+        info!(
+            "STDERR: {}",
+            std::str::from_utf8(release_gpg.stderr.as_ref()).unwrap()
+        );
         assert!(release_gpg.status.success());
         info!("write GPG...");
-        apt_repo
-            .add_file("Release.gpg", release_gpg.stdout.as_slice())
-            .unwrap();
+        Object::create(
+            APT_BUCKET,
+            release_gpg.stdout,
+            "Release.gpg",
+            "application/octet-stream",
+        )
+        .await
+        .expect("could not create deb file in apt bucket");
 
         let in_release = Command::new("gpg")
             .arg("--default-key")
@@ -369,22 +415,17 @@ async fn main() {
             .arg("--clearsign")
             .arg("-o")
             .arg("-")
-            .arg(apt_repo.path().join("Release"))
+            .arg(bucket_dir.path().join("Release"))
             .output()
             .await
             .unwrap();
         assert!(in_release.status.success());
 
         info!("write InRelease...");
-        apt_repo
-            .add_file("InRelease", in_release.stdout.as_slice())
-            .unwrap();
+        Object::create(APT_BUCKET, in_release.stdout, "InRelease", "text/plain")
+            .await
+            .expect("could not create deb file in apt bucket");
 
-        apt_repo
-            .commit(format!("{}: {}", version, additional_message).as_str())
-            .unwrap();
-
-        apt_repo.push(github_token).unwrap();
         homebrew_repo.push(github_token).unwrap();
 
         let try_download = async move {

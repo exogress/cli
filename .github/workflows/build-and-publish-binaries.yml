@@ -269,6 +269,11 @@ jobs:
           echo "name:        ${{ steps.import_gpg.outputs.name }}"
           echo "email:       ${{ steps.import_gpg.outputs.email }}"
 
+      - run: 'echo "$GCE_UPLOAD_BUCKET_CREDENTIALS" > ./gce-key.json'
+        shell: bash
+        env:
+          GCE_UPLOAD_BUCKET_CREDENTIALS: ${{secrets.GCE_UPLOAD_BUCKET_CREDENTIALS}}
+
       - name: Publish APT packages
         working-directory: ./package-publisher
         env:
@@ -276,7 +281,7 @@ jobs:
         run: |
           sudo apt install -y apt-utils
           chmod +x ./exogress-package-publisher
-          ./exogress-package-publisher --version ${{ github.event.release.tag_name }} publish --message "Release new version" --gpg-key-id=${{ steps.import_gpg.outputs.keyid }}
+          GOOGLE_APPLICATION_CREDENTIALS=./gce-key.json ./exogress-package-publisher --version ${{ github.event.release.tag_name }} publish --message "Release new version" --gpg-key-id=${{ steps.import_gpg.outputs.keyid }}
 
       - name: Login to quay.io
         uses: docker/login-action@v1
