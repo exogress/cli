@@ -112,11 +112,6 @@ jobs:
           target: ${{ matrix.target }}
           override: true
 
-      - name: Check version
-        working-directory: ./package-publisher
-        run: |
-          cargo run -- --version ${{ github.event.release.tag_name }} check_version
-
       - name: Build release binary
         uses: actions-rs/cargo@v1
         env:
