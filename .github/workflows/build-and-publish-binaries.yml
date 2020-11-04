@@ -297,6 +297,7 @@ jobs:
         with:
           max_attempts: 5
           retry_wait_seconds: 60
+          timeout_minutes: 15
           command: |
             cd ./package-publisher && \
             VERSION=$(./exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version 2>/dev/null) && \
