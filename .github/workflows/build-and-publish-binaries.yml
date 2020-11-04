@@ -302,7 +302,7 @@ jobs:
 
           BUILDER=$(docker buildx create --driver-opt image=moby/buildkit:master)
           ./exogress-package-publisher --version ${{ github.event.release.tag_name }} docker --os-family=debian-based --parent=ubuntu:focal | \
-            docker buildx build --builder=$BUILDER \
+            docker buildx build --builder=$BUILDER --no-cache \
             --platform linux/arm,linux/arm64,linux/amd64 \
             -t $DOCKER_IMAGE:$VERSION-focal \
             -t $DOCKER_IMAGE:latest-focal \
