@@ -273,9 +273,6 @@ async fn main() {
         const APT_BUCKET: &str = "exogress-apt";
         let bucket_dir = TempDir::new().unwrap();
 
-        // info!("path = {}", bucket_dir.path().to_str().unwrap());
-        env::set_current_dir(bucket_dir.path().to_str().unwrap()).unwrap();
-
         let mut all_objects = Box::pin(
             Object::list(APT_BUCKET)
                 .await
@@ -327,6 +324,10 @@ async fn main() {
             .await
             .expect("could not create deb file in apt bucket");
         }
+
+        info!("path = {}", bucket_dir.path().to_str().unwrap());
+
+        env::set_current_dir(bucket_dir.path().to_str().unwrap()).unwrap();
 
         let output_gen_packages = Command::new("apt-ftparchive")
             .arg("packages")
