@@ -70,6 +70,7 @@ pub fn main() {
             Arg::with_name("account")
                 .long("account")
                 .value_name("STRING")
+                .env("EXG_ACCOUNT")
                 .help("Account")
                 .required(true)
                 .takes_value(true),
@@ -79,6 +80,7 @@ pub fn main() {
                 .long("project")
                 .value_name("STRING")
                 .help("Project")
+                .env("EXG_PROJECT")
                 .required(true)
                 .takes_value(true),
         )
