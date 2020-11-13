@@ -46,17 +46,6 @@ pub fn main() {
                 .takes_value(true),
         )
         .arg(
-            Arg::with_name("cloud_endpoint")
-                .long("cloud-endpoint")
-                .value_name("URL")
-                .help("Cloud endpoint")
-                .env("EXG_CLOUD_ENDPOINT")
-                .default_value(DEFAULT_CLOUD_ENDPOINT)
-                .hidden(true)
-                .required(true)
-                .takes_value(true),
-        )
-        .arg(
             Arg::with_name("secret_access_key")
                 .long("secret-access-key")
                 .value_name("STRING")
@@ -137,11 +126,10 @@ pub fn main() {
         .subcommand_matches("spawn")
         .expect("unknown subcommand");
 
-    let cloud_endpoint: Url = spawn_matches
-        .value_of("cloud_endpoint")
-        .expect("cloud_endpoint is not set")
+    let cloud_endpoint: Url = std::env::var("EXG_CLOUD_ENDPOINT")
+        .unwrap_or_else(|_| DEFAULT_CLOUD_ENDPOINT.to_string())
         .parse()
-        .expect("cloud_endpoint is not Url");
+        .expect("bad cloud endpoint provided");
 
     exogress_common_utils::clap::log::handle(&spawn_matches, "exogress");
     let num_threads = exogress_common_utils::clap::threads::extract_matches(&spawn_matches);
