@@ -123,6 +123,7 @@ jobs:
           toolchain: stable
           target: ${{ matrix.target }}
           override: true
+        if: matrix.target != 'aarch64-apple-darwin'
 
       - name: aarch64-specific items
         run: |
