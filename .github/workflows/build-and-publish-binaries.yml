@@ -14,35 +14,35 @@ on:
       - master
 
 jobs:
-  check-version:
-    runs-on: ubuntu-latest
-    env:
-      RUST_BACKTRACE: 1
-
-    steps:
-      - name: Checkout sources
-        uses: actions/checkout@v1
-        with:
-          submodules: true
-
-      - name: Install stable toolchain
-        uses: actions-rs/toolchain@v1
-        with:
-          toolchain: stable
-          target: ${{ matrix.target }}
-          override: true
-
-      - name: Check version
-        working-directory: ./package-publisher
-        run: |
-          cargo build
-          ./target/debug/exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version
-
-      - name: Upload package-publisher
-        uses: actions/upload-artifact@v2
-        with:
-          name: package-publisher
-          path: ./package-publisher/target/debug/exogress-package-publisher
+#  check-version:
+#    runs-on: ubuntu-latest
+#    env:
+#      RUST_BACKTRACE: 1
+#
+#    steps:
+#      - name: Checkout sources
+#        uses: actions/checkout@v1
+#        with:
+#          submodules: true
+#
+#      - name: Install stable toolchain
+#        uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: stable
+#          target: ${{ matrix.target }}
+#          override: true
+#
+#      - name: Check version
+#        working-directory: ./package-publisher
+#        run: |
+#          cargo build
+#          ./target/debug/exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version
+#
+#      - name: Upload package-publisher
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: package-publisher
+#          path: ./package-publisher/target/debug/exogress-package-publisher
 
   build-and-publish:
     needs: check-version
@@ -59,46 +59,46 @@ jobs:
             target: aarch64-apple-darwin
             upload_asset_name: exogress-macos-aarch64
             rustflags: ''
-          - os: windows-latest
-            upload_asset_name: exogress-win32.exe
-            target: i686-pc-windows-msvc
-            rustflags: '-C target-feature=+crt-static'
-          - os: windows-latest
-            target: x86_64-pc-windows-msvc
-            upload_asset_name: exogress-win64.exe
-            rustflags: '-C target-feature=+crt-static'
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-gnu
-            upload_asset_name: exogress-linux-aarch64-gnu
-            rustflags: ''
-          - os: ubuntu-latest
-            target: aarch64-unknown-linux-musl
-            upload_asset_name: exogress-linux-aarch64-musl-static
-            rustflags: ''
-          - os: ubuntu-latest
-            target: arm-unknown-linux-gnueabi
-            upload_asset_name: exogress-linux-arm-gnueabi
-            rustflags: ''
-          - os: ubuntu-latest
-            target: arm-unknown-linux-musleabi
-            upload_asset_name: exogress-linux-arm-musleabi-static
-            rustflags: ''
-          - os: ubuntu-latest
-            target: armv7-unknown-linux-gnueabihf
-            upload_asset_name: exogress-linux-armv7-gnueabihf
-            rustflags: ''
-          - os: ubuntu-latest
-            target: armv7-unknown-linux-musleabihf
-            upload_asset_name: exogress-linux-armv7-musleabihf-static
-            rustflags: ''
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-gnu
-            upload_asset_name: exogress-linux-x86_64-gnu
-            rustflags: ''
-          - os: ubuntu-latest
-            target: x86_64-unknown-linux-musl
-            upload_asset_name: exogress-linux-x86_64-musl-static
-            rustflags: ''
+#          - os: windows-latest
+#            upload_asset_name: exogress-win32.exe
+#            target: i686-pc-windows-msvc
+#            rustflags: '-C target-feature=+crt-static'
+#          - os: windows-latest
+#            target: x86_64-pc-windows-msvc
+#            upload_asset_name: exogress-win64.exe
+#            rustflags: '-C target-feature=+crt-static'
+#          - os: ubuntu-latest
+#            target: aarch64-unknown-linux-gnu
+#            upload_asset_name: exogress-linux-aarch64-gnu
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: aarch64-unknown-linux-musl
+#            upload_asset_name: exogress-linux-aarch64-musl-static
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: arm-unknown-linux-gnueabi
+#            upload_asset_name: exogress-linux-arm-gnueabi
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: arm-unknown-linux-musleabi
+#            upload_asset_name: exogress-linux-arm-musleabi-static
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: armv7-unknown-linux-gnueabihf
+#            upload_asset_name: exogress-linux-armv7-gnueabihf
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: armv7-unknown-linux-musleabihf
+#            upload_asset_name: exogress-linux-armv7-musleabihf-static
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: x86_64-unknown-linux-gnu
+#            upload_asset_name: exogress-linux-x86_64-gnu
+#            rustflags: ''
+#          - os: ubuntu-latest
+#            target: x86_64-unknown-linux-musl
+#            upload_asset_name: exogress-linux-x86_64-musl-static
+#            rustflags: ''
 
     env:
       RUST_BACKTRACE: 1
