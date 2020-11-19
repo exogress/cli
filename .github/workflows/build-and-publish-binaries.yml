@@ -14,8 +14,38 @@ on:
       - master
 
 jobs:
+#  check-version:
+#    runs-on: ubuntu-latest
+#    env:
+#      RUST_BACKTRACE: 1
+#
+#    steps:
+#      - name: Checkout sources
+#        uses: actions/checkout@v1
+#        with:
+#          submodules: true
+#
+#      - name: Install stable toolchain
+#        uses: actions-rs/toolchain@v1
+#        with:
+#          toolchain: stable
+#          target: ${{ matrix.target }}
+#          override: true
+#
+#      - name: Check version
+#        working-directory: ./package-publisher
+#        run: |
+#          cargo build
+#          ./target/debug/exogress-package-publisher --version ${{ github.event.release.tag_name }} check_version
+#
+#      - name: Upload package-publisher
+#        uses: actions/upload-artifact@v2
+#        with:
+#          name: package-publisher
+#          path: ./package-publisher/target/debug/exogress-package-publisher
+
   build-and-publish:
-    needs: check-version
+#    needs: check-version
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
