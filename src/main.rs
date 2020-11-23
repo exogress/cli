@@ -11,7 +11,7 @@ use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
 use exogress_client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
 use exogress_common_utils::termination::stop_signal_listener;
-use exogress_entities::{LabelName, LabelValue, Ulid};
+use exogress_entities::{LabelName, LabelValue, Ulid, Upstream};
 use futures::future::Either;
 use futures::{future, select_biased, FutureExt};
 use stop_handle::stop_handle;
@@ -19,7 +19,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use tokio::runtime::{Builder, Handle};
 
-use exogress_config_core::DEFAULT_CONFIG_FILE;
+use exogress_config_core::{UpstreamSocketAddr, DEFAULT_CONFIG_FILE};
 use hashbrown::HashMap;
 use std::str::FromStr;
 use trust_dns_resolver::TokioAsyncResolver;
@@ -79,6 +79,15 @@ pub fn main() {
                 .short("l")
                 .value_name("KEY=VALUE")
                 .help("Attach label to running instance")
+                .multiple(true)
+                .required(false)
+                .takes_value(true),
+        )
+        .arg(
+            Arg::with_name("upstream_addr")
+                .long("upstream-addr")
+                .value_name("UPSTREAM_NAME=SOCKET_ADDR")
+                .help("Redefine upstream address ")
                 .multiple(true)
                 .required(false)
                 .takes_value(true),
@@ -190,6 +199,31 @@ pub fn main() {
 
     info!("labels = {:?}", labels);
 
+    let upstreame_redefinitions = spawn_matches
+        .values_of("upstream_addr")
+        .map(|v| {
+            v.map(|v| {
+                let mut kv = v.split('=');
+                let upstream_name: Upstream = kv
+                    .next()
+                    .expect("bad upstream addr format")
+                    .parse()
+                    .expect("bad upstream name");
+                let addr: UpstreamSocketAddr = kv
+                    .next()
+                    .expect("bad upstream addr format")
+                    .parse()
+                    .expect("bad upstream socket addr");
+                assert!(kv.next().is_none(), "bad upstream addr format");
+                (upstream_name, addr)
+            })
+        })
+        .into_iter()
+        .flatten()
+        .collect::<HashMap<Upstream, UpstreamSocketAddr>>();
+
+    info!("upstreame_redefinition = {:?}", upstreame_redefinitions);
+
     let (app_stop_handle, app_stop_wait) = stop_handle::<StopReason>();
 
     rt.block_on(async move {
@@ -262,6 +296,7 @@ pub fn main() {
             .account(account)
             .project(project)
             .watch_config(should_watch_config)
+            .refined_upstream_addrs(upstreame_redefinitions)
             .labels(labels)
             .build()
             .unwrap()
