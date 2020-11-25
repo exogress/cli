@@ -514,7 +514,7 @@ dependencies = [
 
 [[package]]
 name = "exogress"
-version = "0.0.1-alpha.52"
+version = "0.0.1-alpha.53"
 dependencies = [
  "anyhow",
  "clap",
@@ -557,6 +557,7 @@ dependencies = [
  "headers",
  "hostname",
  "http",
+ "lazy_static",
  "mime_guess",
  "notify",
  "parking_lot",
@@ -679,6 +680,7 @@ dependencies = [
  "futures",
  "hashbrown",
  "hyper",
+ "lazy_static",
  "lru_time_cache",
  "parking_lot",
  "rand 0.7.3",
