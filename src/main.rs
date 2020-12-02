@@ -131,6 +131,10 @@ pub fn main() {
         .parse()
         .expect("bad cloud endpoint provided");
 
+    let gw_tunnels_port: u16 = std::env::var("EXG_GW_TUNNELS_PORT")
+        .map(|v| v.parse().expect("bad EXG_GW_TUNNELS_PORT"))
+        .unwrap_or_else(|_| 443);
+
     exogress_common_utils::clap::log::handle(&spawn_matches, "exogress");
     let num_threads = exogress_common_utils::clap::threads::extract_matches(&spawn_matches);
 
@@ -263,6 +267,7 @@ pub fn main() {
             .project(project)
             .watch_config(should_watch_config)
             .labels(labels)
+            .gw_tunnels_port(gw_tunnels_port)
             .build()
             .unwrap()
             .spawn(resolver)
