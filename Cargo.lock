@@ -539,6 +539,27 @@ dependencies = [
 
 [[package]]
 name = "exogress"
+version = "0.0.1-beta.2"
+dependencies = [
+ "anyhow",
+ "clap",
+ "exogress-common",
+ "futures",
+ "hashbrown 0.9.1",
+ "serde_yaml",
+ "shadow-clone",
+ "shellexpand",
+ "stop-handle",
+ "tokio",
+ "tracing",
+ "tracing-futures",
+ "tracing-subscriber",
+ "trust-dns-resolver",
+ "url",
+]
+
+[[package]]
+name = "exogress-common"
 version = "0.0.1-beta.1"
 dependencies = [
  "anyhow",
@@ -602,27 +623,6 @@ dependencies = [
  "warp",
  "webpki",
  "zstd",
-]
-
-[[package]]
-name = "exogress-cli-client"
-version = "0.0.1-beta.2"
-dependencies = [
- "anyhow",
- "clap",
- "exogress",
- "futures",
- "hashbrown 0.9.1",
- "serde_yaml",
- "shadow-clone",
- "shellexpand",
- "stop-handle",
- "tokio",
- "tracing",
- "tracing-futures",
- "tracing-subscriber",
- "trust-dns-resolver",
- "url",
 ]
 
 [[package]]
