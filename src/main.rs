@@ -9,9 +9,9 @@ use std::process::Stdio;
 
 use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
-use exogress::client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
-use exogress::common_utils::termination::stop_signal_listener;
-use exogress::entities::{LabelName, LabelValue, Ulid};
+use exogress_common::client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
+use exogress_common::common_utils::termination::stop_signal_listener;
+use exogress_common::entities::{LabelName, LabelValue, Ulid};
 use futures::future::Either;
 use futures::{future, select_biased, FutureExt};
 use stop_handle::stop_handle;
@@ -19,7 +19,7 @@ use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
 use tokio::runtime::{Builder, Handle};
 
-use exogress::config_core::DEFAULT_CONFIG_FILE;
+use exogress_common::config_core::DEFAULT_CONFIG_FILE;
 use hashbrown::HashMap;
 use std::str::FromStr;
 use trust_dns_resolver::TokioAsyncResolver;
@@ -105,14 +105,14 @@ pub fn main() {
                 .takes_value(true),
         )
         .subcommand(App::new("init").about("create Exofile"))
-        .subcommand(exogress::common_utils::clap::threads::add_args(
-            exogress::common_utils::clap::log::add_args(spawn_args),
+        .subcommand(exogress_common::common_utils::clap::threads::add_args(
+            exogress_common::common_utils::clap::log::add_args(spawn_args),
         ));
 
-    let mut args = exogress::common_utils::clap::autocompletion::add_args(args);
+    let mut args = exogress_common::common_utils::clap::autocompletion::add_args(args);
 
     let matches = args.clone().get_matches();
-    exogress::common_utils::clap::autocompletion::handle_autocompletion(
+    exogress_common::common_utils::clap::autocompletion::handle_autocompletion(
         &mut args, &matches, "exogress",
     );
 
@@ -135,8 +135,8 @@ pub fn main() {
         .map(|v| v.parse().expect("bad EXG_GW_TUNNELS_PORT"))
         .unwrap_or_else(|_| 443);
 
-    exogress::common_utils::clap::log::handle(&spawn_matches, "exogress");
-    let num_threads = exogress::common_utils::clap::threads::extract_matches(&spawn_matches);
+    exogress_common::common_utils::clap::log::handle(&spawn_matches, "exogress");
+    let num_threads = exogress_common::common_utils::clap::threads::extract_matches(&spawn_matches);
 
     let mut rt = Builder::new()
         .threaded_scheduler()

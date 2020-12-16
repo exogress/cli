@@ -1,4 +1,4 @@
-use exogress::config_core::{ClientConfig, DEFAULT_CONFIG_FILE};
+use exogress_common::config_core::{ClientConfig, DEFAULT_CONFIG_FILE};
 use std::fs::OpenOptions;
 use std::io::Write;
 use std::path::Path;
