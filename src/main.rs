@@ -25,7 +25,6 @@ use exogress_common::config_core::DEFAULT_CONFIG_FILE;
 use futures::channel::mpsc;
 use hashbrown::HashMap;
 use std::str::FromStr;
-use tokio::signal::unix::SignalKind;
 use trust_dns_resolver::TokioAsyncResolver;
 use url::Url;
 
@@ -210,7 +209,8 @@ pub fn main() {
             shadow_clone!(reload_config_tx);
 
             async move {
-                let mut hup_listener = tokio::signal::unix::signal(SignalKind::hangup()).unwrap();
+                let mut hup_listener =
+                    tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup()).unwrap();
                 while let Some(_) = hup_listener.recv().await {
                     info!("SIGHUP received");
                     reload_config_tx.unbounded_send(()).unwrap();
