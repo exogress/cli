@@ -1,5 +1,7 @@
 #[macro_use]
 extern crate tracing;
+#[macro_use]
+extern crate shadow_clone;
 
 mod init;
 mod termination;
@@ -20,8 +22,10 @@ use tokio::process::Command;
 use tokio::runtime::{Builder, Handle};
 
 use exogress_common::config_core::DEFAULT_CONFIG_FILE;
+use futures::channel::mpsc;
 use hashbrown::HashMap;
 use std::str::FromStr;
+use tokio::signal::unix::SignalKind;
 use trust_dns_resolver::TokioAsyncResolver;
 use url::Url;
 
@@ -199,6 +203,21 @@ pub fn main() {
     rt.block_on(async move {
         tokio::spawn(stop_signal_listener(app_stop_handle.clone()));
 
+        let (reload_config_tx, reload_config_rx) = mpsc::unbounded();
+
+        #[cfg(unix)]
+        tokio::spawn({
+            shadow_clone!(reload_config_tx);
+
+            async move {
+                let mut hup_listener = tokio::signal::unix::signal(SignalKind::hangup()).unwrap();
+                while let Some(_) = hup_listener.recv().await {
+                    info!("SIGHUP received");
+                    reload_config_tx.unbounded_send(()).unwrap();
+                }
+            }
+        });
+
         let resolver = TokioAsyncResolver::from_system_conf(Handle::current())
             .await
             .unwrap();
@@ -270,7 +289,7 @@ pub fn main() {
             .gw_tunnels_port(gw_tunnels_port)
             .build()
             .unwrap()
-            .spawn(resolver)
+            .spawn(reload_config_tx, reload_config_rx, resolver)
             .fuse();
 
         tokio::select! {
