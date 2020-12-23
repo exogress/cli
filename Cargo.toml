@@ -22,8 +22,8 @@ serde_yaml = "0.8.12"
 hashbrown = "0.9.0"
 shellexpand = "2.0.0"
 
-#exogress-common = { path = "../../server/deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"] }
-exogress-common = { path = "deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"] }
+exogress-common = { path = "../server/deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"] }
+#exogress-common = { path = "deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"] }
 
 [package.metadata.deb]
 depends = "$auto, ca-certificates"
