@@ -1,7 +1,7 @@
 [package]
 name = "exogress"
 description = "Exogress command-line client"
-version = "0.0.1-beta.8"
+version = "0.0.1-beta.9"
 authors = ["Exogress Team <team@exogress.com>"]
 edition = "2018"
 license = "Apache 2.0"
