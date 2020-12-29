@@ -19,13 +19,13 @@ use futures::{future, select_biased, FutureExt};
 use stop_handle::stop_handle;
 use tokio::io::{AsyncBufReadExt, BufReader};
 use tokio::process::Command;
-use tokio::runtime::{Builder, Handle};
+use tokio::runtime::Builder;
 
 use exogress_common::config_core::DEFAULT_CONFIG_FILE;
 use futures::channel::mpsc;
 use hashbrown::HashMap;
 use std::str::FromStr;
-use trust_dns_resolver::TokioAsyncResolver;
+use trust_dns_resolver::{TokioAsyncResolver, TokioHandle};
 use url::Url;
 
 pub fn main() {
@@ -141,10 +141,9 @@ pub fn main() {
     exogress_common::common_utils::clap::log::handle(&spawn_matches, "exogress");
     let num_threads = exogress_common::common_utils::clap::threads::extract_matches(&spawn_matches);
 
-    let mut rt = Builder::new()
-        .threaded_scheduler()
+    let rt = Builder::new_multi_thread()
         .enable_all()
-        .core_threads(num_threads)
+        .worker_threads(num_threads)
         .thread_name("exogress-reactor")
         .build()
         .unwrap();
@@ -218,9 +217,7 @@ pub fn main() {
             }
         });
 
-        let resolver = TokioAsyncResolver::from_system_conf(Handle::current())
-            .await
-            .unwrap();
+        let resolver = TokioAsyncResolver::from_system_conf(TokioHandle).unwrap();
 
         let process = match spawn_matches.values_of("command") {
             Some(cmd_and_args) if cmd_and_args.len() > 0 => {
@@ -263,8 +260,12 @@ pub fn main() {
                     futures::pin_mut!(stdout_forward);
                     futures::pin_mut!(stderr_forward);
 
+                    let wait_child = child.wait().fuse();
+
+                    futures::pin_mut!(wait_child);
+
                     select_biased! {
-                        _ = child.fuse() => {}
+                        _ = wait_child => {}
                         _ = stdout_forward => {}
                         _ = stderr_forward => {}
                     }
