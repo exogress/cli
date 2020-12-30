@@ -11,7 +11,7 @@ clap = "2.33.3"
 url = "2.1.1"
 tokio = { version = "1.0", features = ["macros", "rt-multi-thread", "process"] }
 futures = "0.3.5"
-trust-dns-resolver = { git = "https://github.com/bluejekyll/trust-dns.git", branch = "main" }
+trust-dns-resolver = "0.20.0"
 shadow-clone = "1.2.1"
 tracing = "0.1"
 tracing-subscriber = "0.2"
@@ -22,8 +22,8 @@ serde_yaml = "0.8.12"
 hashbrown = "0.9.0"
 shellexpand = "2.0.0"
 
-#exogress-common = { path = "../server/deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"] }
-exogress-common = { path = "deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"] }
+#exogress-common = { path = "../server/deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"], default-features = false }
+exogress-common = { path = "deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"], default-features = false }
 
 [package.metadata.deb]
 depends = "$auto, ca-certificates"

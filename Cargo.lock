@@ -1073,8 +1073,8 @@ dependencies = [
 
 [[package]]
 name = "input_buffer"
-version = "0.3.1"
-source = "git+https://github.com/nickelc/input_buffer.git?branch=bytes#05d7a2090dea7a172e5a59fd421d7d2cec724efd"
+version = "0.4.0"
+source = "git+https://github.com/snapview/input_buffer.git#e04d16751485f14c024b332658a1ce683af2c384"
 dependencies = [
  "bytes 1.0.0",
 ]
@@ -2269,9 +2269,9 @@ checksum = "6e63cff320ae2c57904679ba7cb63280a3dc4613885beafb148ee7bf9aa9042d"
 
 [[package]]
 name = "standback"
-version = "0.2.13"
+version = "0.2.14"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "cf906c8b8fc3f6ecd1046e01da1d8ddec83e48c8b08b84dcc02b585a6bedf5a8"
+checksum = "c66a8cff4fa24853fdf6b51f75c6d7f8206d7c75cab4e467bcd7f25c2b1febe0"
 dependencies = [
  "version_check",
 ]
@@ -2683,7 +2683,8 @@ dependencies = [
 [[package]]
 name = "trust-dns-proto"
 version = "0.20.0"
-source = "git+https://github.com/bluejekyll/trust-dns.git?branch=main#140881b0e685c7ae6da3ffcbea47cba9134e95bf"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "98a0381b2864c2978db7f8e17c7b23cca5a3a5f99241076e13002261a8ecbabd"
 dependencies = [
  "async-trait",
  "cfg-if 1.0.0",
@@ -2706,7 +2707,8 @@ dependencies = [
 [[package]]
 name = "trust-dns-resolver"
 version = "0.20.0"
-source = "git+https://github.com/bluejekyll/trust-dns.git?branch=main#140881b0e685c7ae6da3ffcbea47cba9134e95bf"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "3072d18c10bd621cb00507d59cfab5517862285c353160366e37fbf4c74856e4"
 dependencies = [
  "cfg-if 1.0.0",
  "futures-util",
@@ -2731,7 +2733,7 @@ checksum = "59547bce71d9c38b83d9c0e92b6066c4253371f15005def0c30d9657f50c7642"
 [[package]]
 name = "tungstenite"
 version = "0.11.1"
-source = "git+https://github.com/nickelc/tungstenite-rs.git?branch=bytes#8417078ef30557e542fe1109a842c8856e232e44"
+source = "git+https://github.com/nickelc/tungstenite-rs.git?branch=bytes#75bf9b87301fd31e25b2cd0459b33b20772c66f8"
 dependencies = [
  "base64 0.13.0",
  "byteorder",
