@@ -24,13 +24,9 @@ use tokio::runtime::Builder;
 use exogress_common::config_core::DEFAULT_CONFIG_FILE;
 use futures::channel::mpsc;
 use hashbrown::HashMap;
-use mimalloc::MiMalloc;
 use std::str::FromStr;
 use trust_dns_resolver::{TokioAsyncResolver, TokioHandle};
 use url::Url;
-
-#[global_allocator]
-static GLOBAL: MiMalloc = MiMalloc;
 
 pub fn main() {
     let spawn_args = App::new("spawn")
