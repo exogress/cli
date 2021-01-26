@@ -13,7 +13,7 @@ use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
 use exogress_common::client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
 use exogress_common::common_utils::termination::stop_signal_listener;
-use exogress_common::entities::{LabelName, LabelValue, Ulid};
+use exogress_common::entities::{LabelName, LabelValue, ProfileName, Ulid};
 use futures::future::Either;
 use futures::{future, select_biased, FutureExt};
 use stop_handle::stop_handle;
@@ -29,7 +29,7 @@ use trust_dns_resolver::{TokioAsyncResolver, TokioHandle};
 use url::Url;
 
 pub fn main() {
-    let spawn_args = App::new("spawn")
+    let spawn_app = App::new("spawn")
         .about("spawn exogress client")
         .arg(
             Arg::with_name("no_watch_config")
@@ -68,6 +68,15 @@ pub fn main() {
                 .takes_value(true),
         )
         .arg(
+            Arg::with_name("profile")
+                .short("p")
+                .long("profile")
+                .help("Profile name")
+                .env("EXG_PROFILE")
+                .required(false)
+                .takes_value(true),
+        )
+        .arg(
             Arg::with_name("project")
                 .long("project")
                 .value_name("STRING")
@@ -93,7 +102,7 @@ pub fn main() {
                 .multiple(true),
         );
 
-    let args = App::new("Exogress CLI")
+    let app = App::new("Exogress CLI")
         .version(crate_version!())
         .author("Exogress Team <team@exogress.com>")
         .about("Expose your app to Exogress cloud load balancer")
@@ -107,27 +116,49 @@ pub fn main() {
                 .default_value(DEFAULT_CONFIG_FILE)
                 .takes_value(true),
         )
-        .subcommand(App::new("init").about("create Exofile"))
+        .subcommand(
+            App::new("init")
+                .arg(
+                    Arg::with_name("framework")
+                        .help("framework name")
+                        .takes_value(true)
+                        .required(true)
+                        .possible_values(&["rails", "svelte"]),
+                )
+                .about("create Exofile"),
+        )
         .subcommand(exogress_common::common_utils::clap::threads::add_args(
-            exogress_common::common_utils::clap::log::add_args(spawn_args),
+            exogress_common::common_utils::clap::log::add_args(spawn_app),
         ));
 
-    let mut args = exogress_common::common_utils::clap::autocompletion::add_args(args);
+    let mut app = exogress_common::common_utils::clap::autocompletion::add_args(app);
 
-    let matches = args.clone().get_matches();
-    exogress_common::common_utils::clap::autocompletion::handle_autocompletion(
-        &mut args, &matches, "exogress",
-    );
+    let matches = app.clone().get_matches();
 
-    if matches.subcommand_matches("init").is_some() {
-        init::create_exofile(".").expect("Could not init");
+    let config_path = matches
+        .value_of("config")
+        .expect("--config is not set")
+        .to_string();
+
+    if let Some(init_matches) = matches.subcommand_matches("init") {
+        let framework = init_matches.value_of("framework").unwrap();
+
+        init::create_exofile(".", &config_path, framework).expect("Could not init");
+        println!("Configuration generated to {}", config_path);
 
         std::process::exit(0);
     }
 
-    let spawn_matches = matches
-        .subcommand_matches("spawn")
-        .expect("unknown subcommand");
+    let spawn_matches = if let Some(matches) = matches.subcommand_matches("spawn") {
+        matches
+    } else {
+        app.print_long_help().unwrap();
+        std::process::exit(1);
+    };
+
+    exogress_common::common_utils::clap::autocompletion::handle_autocompletion(
+        &mut app, &matches, "exogress",
+    );
 
     let cloud_endpoint: Url = std::env::var("EXG_CLOUD_ENDPOINT")
         .unwrap_or_else(|_| DEFAULT_CLOUD_ENDPOINT.to_string())
@@ -148,10 +179,6 @@ pub fn main() {
         .build()
         .unwrap();
 
-    let config_path = matches
-        .value_of("config")
-        .expect("--config is not set")
-        .to_string();
     let should_watch_config = !spawn_matches.is_present("no_watch_config");
 
     let access_key_id: Ulid = spawn_matches
@@ -174,6 +201,10 @@ pub fn main() {
         .value_of("project")
         .expect("project is not set")
         .to_string();
+
+    let profile: Option<ProfileName> = spawn_matches
+        .value_of("profile")
+        .map(|p| p.parse().expect("Bad profile name"));
 
     let labels = spawn_matches
         .values_of("label")
@@ -287,6 +318,7 @@ pub fn main() {
             .project(project)
             .watch_config(should_watch_config)
             .labels(labels)
+            .profile(profile)
             .gw_tunnels_port(gw_tunnels_port)
             .build()
             .unwrap()
