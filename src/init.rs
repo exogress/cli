@@ -50,6 +50,7 @@ fn default_config_rails() -> ClientConfig {
                 host: None,
             },
             health_checks: Default::default(),
+            profiles: None,
         },
     );
 
@@ -146,6 +147,7 @@ fn default_config_svelte() -> ClientConfig {
                 host: None,
             },
             health_checks: Default::default(),
+            profiles: Some(vec!["develop".parse().unwrap()]),
         },
     );
 
