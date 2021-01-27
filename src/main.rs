@@ -123,7 +123,7 @@ pub fn main() {
                         .help("framework name")
                         .takes_value(true)
                         .required(true)
-                        .possible_values(&["rails", "svelte"]),
+                        .possible_values(&["rails", "svelte", "laravel-artisan", "synaps"]),
                 )
                 .about("create Exofile"),
         )

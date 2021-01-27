@@ -1,0 +1,13 @@
+version: "3.9"
+services:
+  synapse-server:
+    build: ./synapse-server
+    volumes:
+      - ./data:/data
+    env_file:
+      - exogress.env
+      - synapse.env
+  synapse-admin:
+    build: ./synapse-admin
+    env_file:
+      - exogress.env

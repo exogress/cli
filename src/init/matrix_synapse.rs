@@ -1,0 +1,218 @@
+use exogress_common::config_core::*;
+use exogress_common::entities::*;
+use include_dir::{include_dir, Dir};
+use maplit::btreemap;
+use std::collections::BTreeMap;
+use std::fs;
+use std::str::FromStr;
+
+static SKELETON: Dir = include_dir!("platforms_templates/synapse");
+
+fn synapse_server_config() -> ClientConfig {
+    let mut upstreams = BTreeMap::new();
+    let upstream: Upstream = "synapse".parse().unwrap();
+    upstreams.insert(
+        upstream.clone(),
+        UpstreamDefinition {
+            addr: UpstreamSocketAddr {
+                port: 8008,
+                host: None,
+            },
+            health_checks: Default::default(),
+            profiles: None,
+        },
+    );
+
+    let rules = vec![
+        Rule {
+            filter: Filter {
+                path: MatchingPath::Strict(vec![
+                    MatchPathSegment::Exact(".well-known".parse().unwrap()),
+                    MatchPathSegment::Exact("matrix".parse().unwrap()),
+                    MatchPathSegment::Exact("server".parse().unwrap()),
+                ]),
+                methods: MethodMatcher::All,
+                trailing_slash: Default::default(),
+            },
+            action: Action::Respond {
+                name: "delegation".parse().unwrap(),
+                status_code: None,
+                data: Default::default(),
+                rescue: vec![],
+            },
+            profiles: None,
+        },
+        Rule {
+            filter: Filter {
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
+                    "_matrix".parse().unwrap(),
+                )]),
+                methods: MethodMatcher::All,
+                trailing_slash: Default::default(),
+            },
+            action: Action::Invoke {
+                modify_request: None,
+                modify_response: vec![],
+                rescue: vec![],
+            },
+            profiles: None,
+        },
+        Rule {
+            filter: Filter {
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
+                    "_synapse".parse().unwrap(),
+                )]),
+                methods: MethodMatcher::All,
+                trailing_slash: Default::default(),
+            },
+            action: Action::Invoke {
+                modify_request: None,
+                modify_response: vec![],
+                rescue: vec![],
+            },
+            profiles: None,
+        },
+        Rule {
+            filter: Filter {
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
+                    "_client".parse().unwrap(),
+                )]),
+                methods: MethodMatcher::All,
+                trailing_slash: Default::default(),
+            },
+            action: Action::Invoke {
+                modify_request: None,
+                modify_response: vec![],
+                rescue: vec![],
+            },
+            profiles: None,
+        },
+    ];
+
+    let mut handlers = BTreeMap::new();
+    handlers.insert(
+        "synapse".parse().unwrap(),
+        ClientHandler {
+            variant: ClientHandlerVariant::Proxy(Proxy {
+                upstream,
+                rebase: Default::default(),
+            }),
+            rules,
+            priority: 50,
+            rescue: Default::default(),
+            profiles: None,
+        },
+    );
+
+    let mount_points = btreemap! {
+        MountPointName::from_str("default").unwrap() => ClientMount {
+            handlers,
+            rescue: Default::default(),
+            static_responses: Default::default(),
+            profiles: Default::default(),
+        }
+    };
+
+    ClientConfig {
+        version: CURRENT_VERSION.clone(),
+        revision: 1.into(),
+        name: "synapse".parse().unwrap(),
+        mount_points,
+        upstreams,
+        static_responses: btreemap! {
+            StaticResponseName::from_str("delegation").unwrap() => StaticResponse::Raw(RawResponse {
+                fallback_accept: Some(mime::APPLICATION_JSON.to_string().into()),
+                status_code: http::StatusCode::OK,
+                body: vec![
+                    ResponseBody {
+                        content_type: mime::APPLICATION_JSON.to_string().into(),
+                        content: "{ \"m.server\": \"{{ this.facts.mount_point_hostname }}:443\" }".into(),
+                        engine: Some(TemplateEngine::Handlebars),
+                    }
+                ],
+                common: HttpHeaders {
+                    headers: Default::default(),
+                }
+            })
+        },
+        rescue: vec![],
+    }
+}
+
+fn synapse_admin_config() -> ClientConfig {
+    let mut handlers = BTreeMap::new();
+    handlers.insert(
+        HandlerName::from_str("synapse-admin").unwrap(),
+        ClientHandler {
+            variant: ClientHandlerVariant::StaticDir(StaticDir {
+                dir: "/app".parse().unwrap(),
+                rebase: Rebase::default(),
+            }),
+            rules: default_rules(),
+            priority: 100,
+            rescue: vec![],
+            profiles: None,
+        },
+    );
+
+    let mount_points = btreemap! {
+        MountPointName::from_str("default").unwrap() => ClientMount {
+            handlers,
+            profiles: Default::default(),
+            static_responses: Default::default(),
+            rescue: Default::default(),
+        }
+    };
+
+    ClientConfig {
+        version: CURRENT_VERSION.clone(),
+        revision: 1.into(),
+        name: "synapse-admin".parse().unwrap(),
+        mount_points,
+        upstreams: Default::default(),
+        static_responses: Default::default(),
+        rescue: vec![],
+    }
+}
+
+pub fn generate(_docker: bool, _docker_compose: bool) -> anyhow::Result<()> {
+    fs::create_dir_all("data")?;
+
+    for dir in SKELETON.dirs() {
+        fs::create_dir_all(dir.path())?;
+        for file in dir.files() {
+            fs::write(file.path(), file.contents())?;
+        }
+    }
+
+    for file in SKELETON.files() {
+        fs::write(file.path(), file.contents())?;
+    }
+
+    let synapse_config = synapse_server_config();
+    let synapse_admin_config = synapse_admin_config();
+
+    fs::write(
+        "synapse-server/Exofile",
+        serde_yaml::to_string(&synapse_config).unwrap(),
+    )?;
+    fs::write(
+        "synapse-admin/Exofile",
+        serde_yaml::to_string(&synapse_admin_config).unwrap(),
+    )?;
+
+    println!("Fill-in required data in files: \n");
+    println!(" - exogress.env");
+    println!(" - synapse.env\n\n");
+
+    println!("Prepare synapse environment: \n");
+    println!("  docker-compose run synapse generate\n\n");
+
+    println!("Configure data/homeserver.yaml \n");
+    println!("  - bind_addresses: ['127.0.0.1']\n\n");
+
+    println!("Start: \n");
+    println!("  docker-compose up --force-recreate --build\n\n");
+
+    Ok(())
+}
