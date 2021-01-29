@@ -25,9 +25,9 @@ maplit = "1.0.2"
 http = "0.2"
 include_dir = "0.6.0"
 mime = "0.3.16"
+regex = "1.3.7"
 
-#exogress-common = { path = "../server/deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"], default-features = false }
-exogress-common = { path = "deps/exogress", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"], default-features = false }
+exogress-common = { git = "https://github.com/exogress/exogress.git", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities",  "common-utils"], default-features = false }
 
 [package.metadata.deb]
 depends = "$auto, ca-certificates"

@@ -2,6 +2,7 @@ use exogress_common::config_core::*;
 use exogress_common::entities::*;
 use include_dir::{include_dir, Dir};
 use maplit::btreemap;
+use regex::Regex;
 use std::collections::BTreeMap;
 use std::fs;
 use std::str::FromStr;
@@ -59,23 +60,8 @@ fn synapse_server_config() -> ClientConfig {
         },
         Rule {
             filter: Filter {
-                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
-                    "_synapse".parse().unwrap(),
-                )]),
-                methods: MethodMatcher::All,
-                trailing_slash: Default::default(),
-            },
-            action: Action::Invoke {
-                modify_request: None,
-                modify_response: vec![],
-                rescue: vec![],
-            },
-            profiles: None,
-        },
-        Rule {
-            filter: Filter {
-                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
-                    "_client".parse().unwrap(),
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Regex(
+                    Regex::new(r"(_synapse|_matrix|_client)").unwrap(),
                 )]),
                 methods: MethodMatcher::All,
                 trailing_slash: Default::default(),
