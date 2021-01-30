@@ -34,6 +34,12 @@ jobs:
 #            target
 #          key: ${{ runner.os }}-cargo-verify-${{ hashFiles('**/Cargo.lock') }}
 
+      - name: Update exogress-common
+        uses: actions-rs/cargo@v1
+        with:
+          command: ${{ matrix.command }}
+          args: update -p exogress-common
+
       - name: Run cargo
         uses: actions-rs/cargo@v1
         with:

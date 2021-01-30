@@ -28,9 +28,15 @@ fn synapse_server_config() -> ClientConfig {
         Rule {
             filter: Filter {
                 path: MatchingPath::Strict(vec![
-                    MatchPathSegment::Exact(".well-known".parse().unwrap()),
-                    MatchPathSegment::Exact("matrix".parse().unwrap()),
-                    MatchPathSegment::Exact("server".parse().unwrap()),
+                    MatchPathSegment::Single(MatchPathSingleSegment::Exact(
+                        ".well-known".parse().unwrap(),
+                    )),
+                    MatchPathSegment::Single(MatchPathSingleSegment::Exact(
+                        "matrix".parse().unwrap(),
+                    )),
+                    MatchPathSegment::Single(MatchPathSingleSegment::Exact(
+                        "server".parse().unwrap(),
+                    )),
                 ]),
                 methods: MethodMatcher::All,
                 trailing_slash: Default::default(),
@@ -45,30 +51,32 @@ fn synapse_server_config() -> ClientConfig {
         },
         Rule {
             filter: Filter {
-                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
-                    "_matrix".parse().unwrap(),
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Single(
+                    MatchPathSingleSegment::Exact("_matrix".parse().unwrap()),
                 )]),
                 methods: MethodMatcher::All,
                 trailing_slash: Default::default(),
             },
             action: Action::Invoke {
                 modify_request: None,
-                modify_response: vec![],
+                on_response: vec![],
                 rescue: vec![],
             },
             profiles: None,
         },
         Rule {
             filter: Filter {
-                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Regex(
-                    Regex::new(r"(_synapse|_matrix|_client)").unwrap(),
-                )]),
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Choice(vec![
+                    "_synapse".parse().unwrap(),
+                    "_matrix".parse().unwrap(),
+                    "_client".parse().unwrap(),
+                ])]),
                 methods: MethodMatcher::All,
                 trailing_slash: Default::default(),
             },
             action: Action::Invoke {
                 modify_request: None,
-                modify_response: vec![],
+                on_response: vec![],
                 rescue: vec![],
             },
             profiles: None,

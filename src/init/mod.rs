@@ -1,8 +1,8 @@
 use exogress_common::config_core::{
     default_rules, Action, CatchAction, CatchMatcher, ClientConfig, ClientHandler,
-    ClientHandlerVariant, Filter, MatchPathSegment, MatchingPath, MethodMatcher, Proxy, RescueItem,
-    Rule, StaticDir, StatusCodeRange, TrailingSlashFilterRule, UpstreamDefinition,
-    UpstreamSocketAddr, DEFAULT_CONFIG_FILE,
+    ClientHandlerVariant, Filter, MatchPathSegment, MatchPathSingleSegment, MatchingPath,
+    MethodMatcher, Proxy, RescueItem, Rule, StaticDir, StatusCodeRange, TrailingSlashFilterRule,
+    UpstreamDefinition, UpstreamSocketAddr, DEFAULT_CONFIG_FILE,
 };
 use exogress_common::config_core::{ClientMount, CURRENT_VERSION};
 use exogress_common::entities::{MountPointName, Upstream};
@@ -65,15 +65,15 @@ fn default_config_rails() -> ClientConfig {
     let static_rules = vec![
         Rule {
             filter: Filter {
-                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Exact(
-                    "assets".parse().unwrap(),
+                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Single(
+                    MatchPathSingleSegment::Exact("assets".parse().unwrap()),
                 )]),
                 methods: MethodMatcher::Exact(vec![Method::GET, Method::HEAD]),
                 trailing_slash: Default::default(),
             },
             action: Action::Invoke {
                 modify_request: None,
-                modify_response: vec![],
+                on_response: vec![],
                 rescue: vec![],
             },
             profiles: None,
@@ -86,7 +86,7 @@ fn default_config_rails() -> ClientConfig {
             },
             action: Action::Invoke {
                 modify_request: None,
-                modify_response: vec![],
+                on_response: vec![],
                 rescue: vec![RescueItem {
                     catch: CatchMatcher::StatusCode(StatusCodeRange::Single(StatusCode::NOT_FOUND)),
                     handle: CatchAction::NextHandler,
@@ -225,8 +225,8 @@ fn default_config_laravel() -> ClientConfig {
     let static_rules = vec![
         Rule {
             filter: Filter {
-                path: MatchingPath::Strict(vec![MatchPathSegment::Exact(
-                    "index.php".parse().unwrap(),
+                path: MatchingPath::Strict(vec![MatchPathSegment::Single(
+                    MatchPathSingleSegment::Exact("index.php".parse().unwrap()),
                 )]),
                 methods: MethodMatcher::All,
                 trailing_slash: TrailingSlashFilterRule::Deny,
@@ -242,7 +242,7 @@ fn default_config_laravel() -> ClientConfig {
             },
             action: Action::Invoke {
                 modify_request: None,
-                modify_response: vec![],
+                on_response: vec![],
                 rescue: vec![RescueItem {
                     catch: CatchMatcher::StatusCode(StatusCodeRange::Single(StatusCode::NOT_FOUND)),
                     handle: CatchAction::NextHandler,
