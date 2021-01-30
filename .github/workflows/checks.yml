@@ -37,8 +37,8 @@ jobs:
       - name: Update exogress-common
         uses: actions-rs/cargo@v1
         with:
-          command: ${{ matrix.command }}
-          args: update -p exogress-common
+          command: update
+          args: -p exogress-common
 
       - name: Run cargo
         uses: actions-rs/cargo@v1
@@ -79,6 +79,12 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ runner.os }}-${{ matrix.target }}-cargo-build-native-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: update exogress-common
+        uses: actions-rs/cargo@v1
+        with:
+          command: update
+          args: -p exogress-common
 
       - name: Build
         uses: actions-rs/cargo@v1
@@ -136,6 +142,13 @@ jobs:
             ~/.cargo/git
             target
           key: ${{ matrix.target }}-cargo-build-cross-${{ hashFiles('**/Cargo.lock') }}
+
+      - name: Update
+        uses: actions-rs/cargo@v1
+        with:
+          use-cross: true
+          command: update
+          args: -p exogress-common
 
       - name: Build
         uses: actions-rs/cargo@v1

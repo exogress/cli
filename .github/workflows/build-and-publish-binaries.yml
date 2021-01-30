@@ -137,8 +137,8 @@ jobs:
           RUSTFLAGS: ${{ matrix.rustflags }}
         with:
           use-cross: true
-          command: build
-          args: update -p exogress-common
+          command: update
+          args: -p exogress-common
 
       - name: Build release binary
         uses: actions-rs/cargo@v1
