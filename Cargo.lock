@@ -46,27 +46,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "33954243bd79057c2de7338850b85983a44588021f8a5fee574a8888c6de4344"
 
 [[package]]
-name = "async-stream"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "3670df70cbc01729f901f94c887814b3c68db038aad1329a418bae178bc5295c"
-dependencies = [
- "async-stream-impl",
- "futures-core",
-]
-
-[[package]]
-name = "async-stream-impl"
-version = "0.3.0"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "a3548b8efc9f8e8a5a0a2808c5bd8451a9031b9e5b879a79590304ae928b0a70"
-dependencies = [
- "proc-macro2",
- "quote",
- "syn",
-]
-
-[[package]]
 name = "async-trait"
 version = "0.1.42"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -491,7 +470,7 @@ dependencies = [
 [[package]]
 name = "exogress-common"
 version = "0.0.1-beta.1"
-source = "git+https://github.com/exogress/exogress.git?branch=master#682b08d20bbcf39bc9a27f4b22cdcc33e00ff25c"
+source = "git+https://github.com/exogress/exogress.git?branch=master#9f7170ddf0b96caaf4b93ffc43acf6dc905e6047"
 dependencies = [
  "anyhow",
  "bincode",
@@ -511,6 +490,7 @@ dependencies = [
  "humantime-serde",
  "hyper",
  "jsonwebtoken",
+ "langtag",
  "lazy_static",
  "lru_time_cache",
  "maplit",
@@ -1092,6 +1072,14 @@ dependencies = [
  "serde",
  "serde_json",
  "simple_asn1",
+]
+
+[[package]]
+name = "langtag"
+version = "0.2.0"
+source = "git+https://github.com/glebpom/langtag.git?branch=master#905672c535a4951f3c744a68abb199877eefa59a"
+dependencies = [
+ "serde",
 ]
 
 [[package]]
@@ -2444,11 +2432,10 @@ dependencies = [
 
 [[package]]
 name = "tokio-util"
-version = "0.6.2"
+version = "0.6.3"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "feb971a26599ffd28066d387f109746df178eff14d5ea1e235015c5601967a4b"
+checksum = "ebb7cb2f00c5ae8df755b252306272cd1790d39728363936e01827e11f0b017b"
 dependencies = [
- "async-stream",
  "bytes",
  "futures-core",
  "futures-io",
@@ -2456,7 +2443,6 @@ dependencies = [
  "log",
  "pin-project-lite 0.2.4",
  "tokio",
- "tokio-stream",
 ]
 
 [[package]]

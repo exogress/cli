@@ -108,6 +108,7 @@ fn default_config_rails() -> ClientConfig {
             priority: 10,
             rescue: Default::default(),
             profiles: None,
+            languages: None,
         },
     );
     handlers.insert(
@@ -121,6 +122,7 @@ fn default_config_rails() -> ClientConfig {
             priority: 50,
             rescue: Default::default(),
             profiles: None,
+            languages: None,
         },
     );
 
@@ -171,6 +173,7 @@ fn default_config_svelte() -> ClientConfig {
             priority: 50,
             rescue: Default::default(),
             profiles: Some(vec!["production".parse().unwrap()]),
+            languages: None,
         },
     );
     handlers.insert(
@@ -184,6 +187,7 @@ fn default_config_svelte() -> ClientConfig {
             priority: 50,
             rescue: Default::default(),
             profiles: Some(vec!["develop".parse().unwrap()]),
+            languages: None,
         },
     );
 
@@ -264,6 +268,7 @@ fn default_config_laravel() -> ClientConfig {
             priority: 50,
             rescue: Default::default(),
             profiles: None,
+            languages: None,
         },
     );
     handlers.insert(
@@ -277,6 +282,7 @@ fn default_config_laravel() -> ClientConfig {
             priority: 10,
             rescue: Default::default(),
             profiles: None,
+            languages: None,
         },
     );
 
