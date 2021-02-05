@@ -74,6 +74,8 @@ fn synapse_server_config() -> ClientConfig {
             variant: ClientHandlerVariant::Proxy(Proxy {
                 upstream,
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules,
             priority: 50,
@@ -126,6 +128,8 @@ fn synapse_admin_config() -> ClientConfig {
             variant: ClientHandlerVariant::StaticDir(StaticDir {
                 dir: "/app".parse().unwrap(),
                 rebase: Rebase::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: default_rules(),
             priority: 100,

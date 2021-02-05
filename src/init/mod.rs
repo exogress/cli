@@ -103,6 +103,8 @@ fn default_config_rails() -> ClientConfig {
             variant: ClientHandlerVariant::StaticDir(StaticDir {
                 dir: "./public".parse().unwrap(),
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: static_rules,
             priority: 10,
@@ -117,6 +119,8 @@ fn default_config_rails() -> ClientConfig {
             variant: ClientHandlerVariant::Proxy(Proxy {
                 upstream,
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: default_rules(),
             priority: 50,
@@ -168,6 +172,8 @@ fn default_config_svelte() -> ClientConfig {
             variant: ClientHandlerVariant::StaticDir(StaticDir {
                 dir: "./public".parse().unwrap(),
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: default_rules(),
             priority: 50,
@@ -182,6 +188,8 @@ fn default_config_svelte() -> ClientConfig {
             variant: ClientHandlerVariant::Proxy(Proxy {
                 upstream,
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: default_rules(),
             priority: 50,
@@ -263,6 +271,8 @@ fn default_config_laravel() -> ClientConfig {
             variant: ClientHandlerVariant::Proxy(Proxy {
                 upstream,
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: default_rules(),
             priority: 50,
@@ -277,6 +287,8 @@ fn default_config_laravel() -> ClientConfig {
             variant: ClientHandlerVariant::StaticDir(StaticDir {
                 dir: "./public".parse().unwrap(),
                 rebase: Default::default(),
+                cache: Default::default(),
+                post_processing: Default::default(),
             }),
             rules: static_rules,
             priority: 10,
