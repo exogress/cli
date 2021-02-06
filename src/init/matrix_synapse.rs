@@ -76,6 +76,7 @@ fn synapse_server_config() -> ClientConfig {
                 rebase: Default::default(),
                 cache: Default::default(),
                 post_processing: Default::default(),
+                websockets: true,
             }),
             rules,
             priority: 50,
