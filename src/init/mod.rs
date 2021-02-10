@@ -1,18 +1,16 @@
-use exogress_common::config_core::{
-    default_rules, Action, CatchAction, CatchMatcher, ClientConfig, ClientHandler,
-    ClientHandlerVariant, Filter, MatchPathSegment, MatchPathSingleSegment, MatchingPath,
-    MethodMatcher, Proxy, RescueItem, Rule, StaticDir, StatusCodeRange, TrailingSlashFilterRule,
-    UpstreamDefinition, UpstreamSocketAddr, DEFAULT_CONFIG_FILE,
+use exogress_common::{
+    config_core::{
+        default_rules, Action, CatchAction, CatchMatcher, ClientConfig, ClientHandler,
+        ClientHandlerVariant, ClientMount, Filter, MatchPathSegment, MatchPathSingleSegment,
+        MatchingPath, MethodMatcher, Proxy, RescueItem, Rule, StaticDir, StatusCodeRange,
+        TrailingSlashFilterRule, UpstreamDefinition, UpstreamSocketAddr, CURRENT_VERSION,
+        DEFAULT_CONFIG_FILE,
+    },
+    entities::{MountPointName, Upstream},
 };
-use exogress_common::config_core::{ClientMount, CURRENT_VERSION};
-use exogress_common::entities::{MountPointName, Upstream};
 use http::{Method, StatusCode};
 use maplit::btreemap;
-use std::collections::BTreeMap;
-use std::fs::OpenOptions;
-use std::io::Write;
-use std::path::Path;
-use std::str::FromStr;
+use std::{collections::BTreeMap, fs::OpenOptions, io::Write, path::Path, str::FromStr};
 
 pub mod matrix_synapse;
 

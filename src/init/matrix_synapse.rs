@@ -1,10 +1,7 @@
-use exogress_common::config_core::*;
-use exogress_common::entities::*;
+use exogress_common::{config_core::*, entities::*};
 use include_dir::{include_dir, Dir};
 use maplit::btreemap;
-use std::collections::BTreeMap;
-use std::fs;
-use std::str::FromStr;
+use std::{collections::BTreeMap, fs, str::FromStr};
 
 static SKELETON: Dir = include_dir!("platforms_templates/synapse");
 

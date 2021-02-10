@@ -6,20 +6,22 @@ extern crate shadow_clone;
 mod init;
 mod termination;
 
-use std::collections::VecDeque;
-use std::process::Stdio;
+use std::{collections::VecDeque, process::Stdio};
 
 use crate::termination::StopReason;
 use clap::{crate_version, App, Arg};
-use exogress_common::client_core::{Client, DEFAULT_CLOUD_ENDPOINT};
-use exogress_common::common_utils::termination::stop_signal_listener;
-use exogress_common::entities::{LabelName, LabelValue, ProfileName, Ulid};
-use futures::future::Either;
-use futures::{future, select_biased, FutureExt};
+use exogress_common::{
+    client_core::{Client, DEFAULT_CLOUD_ENDPOINT},
+    common_utils::termination::stop_signal_listener,
+    entities::{LabelName, LabelValue, ProfileName, Ulid},
+};
+use futures::{future, future::Either, select_biased, FutureExt};
 use stop_handle::stop_handle;
-use tokio::io::{AsyncBufReadExt, BufReader};
-use tokio::process::Command;
-use tokio::runtime::Builder;
+use tokio::{
+    io::{AsyncBufReadExt, BufReader},
+    process::Command,
+    runtime::Builder,
+};
 
 use exogress_common::config_core::DEFAULT_CONFIG_FILE;
 use futures::channel::mpsc;
