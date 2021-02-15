@@ -1,10 +1,10 @@
 use exogress_common::{
     config_core::{
-        default_rules, Action, CatchAction, CatchMatcher, ClientConfig, ClientHandler,
-        ClientHandlerVariant, ClientMount, Filter, MatchPathSegment, MatchPathSingleSegment,
-        MatchingPath, MethodMatcher, Proxy, RescueItem, Rule, StaticDir, StatusCodeRange,
-        TrailingSlashFilterRule, UpstreamDefinition, UpstreamSocketAddr, CURRENT_VERSION,
-        DEFAULT_CONFIG_FILE,
+        default_rules, refinable::Refinable, Action, CatchAction, CatchMatcher, ClientConfig,
+        ClientHandler, ClientHandlerVariant, ClientMount, Filter, MatchPathSegment,
+        MatchPathSingleSegment, MatchingPath, MethodMatcher, Proxy, RescueItem, Rule, StaticDir,
+        StatusCodeRange, TrailingSlashFilterRule, UpstreamDefinition, UpstreamSocketAddr,
+        CURRENT_VERSION, DEFAULT_CONFIG_FILE,
     },
     entities::{MountPointName, Upstream},
 };
@@ -108,7 +108,7 @@ fn default_config_rails() -> ClientConfig {
             }),
             rules: static_rules,
             priority: 10,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: None,
             languages: None,
         },
@@ -125,7 +125,7 @@ fn default_config_rails() -> ClientConfig {
             }),
             rules: default_rules(),
             priority: 50,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: None,
             languages: None,
         },
@@ -134,8 +134,7 @@ fn default_config_rails() -> ClientConfig {
     let mount_points = btreemap! {
         MountPointName::from_str("default").unwrap() => ClientMount {
             handlers,
-            rescue: Default::default(),
-            static_responses: Default::default(),
+            refinable: Refinable::default(),
             profiles: Default::default(),
         }
     };
@@ -146,8 +145,7 @@ fn default_config_rails() -> ClientConfig {
         name: "rails".parse().unwrap(),
         mount_points,
         upstreams,
-        static_responses: Default::default(),
-        rescue: vec![],
+        refinable: Refinable::default(),
     }
 }
 
@@ -178,7 +176,7 @@ fn default_config_svelte() -> ClientConfig {
             }),
             rules: default_rules(),
             priority: 50,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: Some(vec!["production".parse().unwrap()]),
             languages: None,
         },
@@ -195,7 +193,7 @@ fn default_config_svelte() -> ClientConfig {
             }),
             rules: default_rules(),
             priority: 50,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: Some(vec!["develop".parse().unwrap()]),
             languages: None,
         },
@@ -204,8 +202,7 @@ fn default_config_svelte() -> ClientConfig {
     let mount_points = btreemap! {
         MountPointName::from_str("default").unwrap() => ClientMount {
             handlers,
-            rescue: Default::default(),
-            static_responses: Default::default(),
+            refinable: Refinable::default(),
             profiles: Default::default(),
         }
     };
@@ -216,8 +213,7 @@ fn default_config_svelte() -> ClientConfig {
         name: "svelte".parse().unwrap(),
         mount_points,
         upstreams: Default::default(),
-        static_responses: Default::default(),
-        rescue: vec![],
+        refinable: Refinable::default(),
     }
 }
 
@@ -281,7 +277,7 @@ fn default_config_laravel() -> ClientConfig {
             }),
             rules: default_rules(),
             priority: 50,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: None,
             languages: None,
         },
@@ -297,7 +293,7 @@ fn default_config_laravel() -> ClientConfig {
             }),
             rules: static_rules,
             priority: 10,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: None,
             languages: None,
         },
@@ -306,8 +302,7 @@ fn default_config_laravel() -> ClientConfig {
     let mount_points = btreemap! {
         MountPointName::from_str("default").unwrap() => ClientMount {
             handlers,
-            rescue: Default::default(),
-            static_responses: Default::default(),
+            refinable: Refinable::default(),
             profiles: Default::default(),
         }
     };
@@ -318,7 +313,6 @@ fn default_config_laravel() -> ClientConfig {
         name: "laravel".parse().unwrap(),
         mount_points,
         upstreams,
-        static_responses: Default::default(),
-        rescue: vec![],
+        refinable: Refinable::default(),
     }
 }

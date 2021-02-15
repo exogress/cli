@@ -1,4 +1,7 @@
-use exogress_common::{config_core::*, entities::*};
+use exogress_common::{
+    config_core::{referenced::Container, refinable::Refinable, *},
+    entities::*,
+};
 use include_dir::{include_dir, Dir};
 use maplit::btreemap;
 use std::{collections::BTreeMap, fs, str::FromStr};
@@ -39,7 +42,7 @@ fn synapse_server_config() -> ClientConfig {
                 trailing_slash: Default::default(),
             },
             action: Action::Respond {
-                name: "delegation".parse().unwrap(),
+                static_response: Container::Shared("delegation".parse().unwrap()),
                 status_code: None,
                 data: Default::default(),
                 rescue: vec![],
@@ -79,7 +82,7 @@ fn synapse_server_config() -> ClientConfig {
             }),
             rules,
             priority: 50,
-            rescue: Default::default(),
+            refinable: Refinable::default(),
             profiles: None,
             languages: None,
         },
@@ -88,8 +91,7 @@ fn synapse_server_config() -> ClientConfig {
     let mount_points = btreemap! {
         MountPointName::from_str("default").unwrap() => ClientMount {
             handlers,
-            rescue: Default::default(),
-            static_responses: Default::default(),
+            refinable: Refinable::default(),
             profiles: Default::default(),
         }
     };
@@ -100,23 +102,25 @@ fn synapse_server_config() -> ClientConfig {
         name: "synapse".parse().unwrap(),
         mount_points,
         upstreams,
-        static_responses: btreemap! {
-            StaticResponseName::from_str("delegation").unwrap() => StaticResponse::Raw(RawResponse {
-                fallback_accept: Some(mime::APPLICATION_JSON.to_string().into()),
-                status_code: http::StatusCode::OK,
-                body: vec![
-                    ResponseBody {
-                        content_type: mime::APPLICATION_JSON.to_string().into(),
-                        content: "{ \"m.server\": \"{{ this.facts.mount_point_hostname }}:443\" }".into(),
-                        engine: Some(TemplateEngine::Handlebars),
+        refinable: Refinable {
+            static_responses: btreemap! {
+                StaticResponseName::from_str("delegation").unwrap() => StaticResponse::Raw(RawResponse {
+                    fallback_accept: Some(mime::APPLICATION_JSON),
+                    status_code: http::StatusCode::OK,
+                    body: vec![
+                        ResponseBody {
+                            content_type: mime::APPLICATION_JSON,
+                            content: "{ \"m.server\": \"{{ this.facts.mount_point_hostname }}:443\" }".into(),
+                            engine: Some(TemplateEngine::Handlebars),
+                        }
+                    ],
+                    common: HttpHeaders {
+                        headers: Default::default(),
                     }
-                ],
-                common: HttpHeaders {
-                    headers: Default::default(),
-                }
-            })
+                })
+            },
+            rescue: vec![],
         },
-        rescue: vec![],
     }
 }
 
@@ -133,7 +137,7 @@ fn synapse_admin_config() -> ClientConfig {
             }),
             rules: default_rules(),
             priority: 100,
-            rescue: vec![],
+            refinable: Default::default(),
             profiles: None,
             languages: None,
         },
@@ -143,8 +147,7 @@ fn synapse_admin_config() -> ClientConfig {
         MountPointName::from_str("default").unwrap() => ClientMount {
             handlers,
             profiles: Default::default(),
-            static_responses: Default::default(),
-            rescue: Default::default(),
+            refinable: Refinable::default(),
         }
     };
 
@@ -154,8 +157,7 @@ fn synapse_admin_config() -> ClientConfig {
         name: "synapse-admin".parse().unwrap(),
         mount_points,
         upstreams: Default::default(),
-        static_responses: Default::default(),
-        rescue: vec![],
+        refinable: Refinable::default(),
     }
 }
 
