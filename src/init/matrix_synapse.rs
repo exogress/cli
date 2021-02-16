@@ -105,18 +105,16 @@ fn synapse_server_config() -> ClientConfig {
         refinable: Refinable {
             static_responses: btreemap! {
                 StaticResponseName::from_str("delegation").unwrap() => StaticResponse::Raw(RawResponse {
-                    fallback_accept: Some(mime::APPLICATION_JSON),
-                    status_code: http::StatusCode::OK,
+                    fallback_accept: Some(mime::APPLICATION_JSON.into()),
+                    status_code: http::StatusCode::OK.into(),
                     body: vec![
                         ResponseBody {
-                            content_type: mime::APPLICATION_JSON,
+                            content_type: mime::APPLICATION_JSON.into(),
                             content: "{ \"m.server\": \"{{ this.facts.mount_point_hostname }}:443\" }".into(),
                             engine: Some(TemplateEngine::Handlebars),
                         }
                     ],
-                    common: HttpHeaders {
-                        headers: Default::default(),
-                    }
+                    headers: Default::default(),
                 })
             },
             rescue: vec![],
@@ -179,11 +177,11 @@ pub fn generate(_docker: bool, _docker_compose: bool) -> anyhow::Result<()> {
     let synapse_admin_config = synapse_admin_config();
 
     fs::write(
-        "synapse-server/Exofile",
+        "synapse-server/Exofile.yml",
         serde_yaml::to_string(&synapse_config).unwrap(),
     )?;
     fs::write(
-        "synapse-admin/Exofile",
+        "synapse-admin/Exofile.yml",
         serde_yaml::to_string(&synapse_admin_config).unwrap(),
     )?;
 

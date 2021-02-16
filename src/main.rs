@@ -127,7 +127,7 @@ pub fn main() {
                         .required(true)
                         .possible_values(&["rails", "svelte", "laravel-artisan", "synaps"]),
                 )
-                .about("create Exofile"),
+                .about("create Exofile.yml"),
         )
         .subcommand(exogress_common::common_utils::clap::threads::add_args(
             exogress_common::common_utils::clap::log::add_args(spawn_app),

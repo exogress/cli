@@ -7,6 +7,6 @@ RUN apt update && apt install -y gnupg curl && \
     echo "deb https://apt.exogress.com/ /" > /etc/apt/sources.list.d/exogress.list && \
     apt update && apt install -y exogress
 
-ADD Exofile .
+ADD Exofile.yml .
 
 CMD ["exogress", "spawn"]

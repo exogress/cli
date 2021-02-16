@@ -67,7 +67,7 @@ fn default_config_rails() -> ClientConfig {
                     MatchPathSingleSegment::Exact("assets".parse().unwrap()),
                 )]),
                 query: Default::default(),
-                methods: MethodMatcher::Exact(vec![Method::GET, Method::HEAD]),
+                methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
                 trailing_slash: Default::default(),
             },
             action: Action::Invoke {
@@ -81,7 +81,7 @@ fn default_config_rails() -> ClientConfig {
             filter: Filter {
                 path: MatchingPath::Wildcard,
                 query: Default::default(),
-                methods: MethodMatcher::Exact(vec![Method::GET, Method::HEAD]),
+                methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
                 trailing_slash: Default::default(),
             },
             action: Action::Invoke {
@@ -249,7 +249,7 @@ fn default_config_laravel() -> ClientConfig {
             filter: Filter {
                 path: MatchingPath::Wildcard,
                 query: Default::default(),
-                methods: MethodMatcher::Exact(vec![Method::GET, Method::HEAD]),
+                methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
                 trailing_slash: Default::default(),
             },
             action: Action::Invoke {
