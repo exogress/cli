@@ -520,7 +520,7 @@ dependencies = [
 [[package]]
 name = "exogress-common"
 version = "0.0.1-beta.1"
-source = "git+https://github.com/exogress/exogress.git?branch=master#2da111abb3a5c2659110cc336218bfea416762cd"
+source = "git+https://github.com/exogress/exogress.git?branch=master#f0c94ca03933d7226d0c9a924d233d085925faee"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2161,9 +2161,9 @@ dependencies = [
 
 [[package]]
 name = "serde_with"
-version = "1.6.2"
+version = "1.6.4"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "42fa8fb0da0bf5aa7dd5d8fe1f9ec769833eb7cf97ff89942903809e600de908"
+checksum = "b44be9227e214a0420707c9ca74c2d4991d9955bae9415a8f93f05cebf561be5"
 dependencies = [
  "serde",
  "serde_with_macros",
