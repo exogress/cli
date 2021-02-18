@@ -84,7 +84,7 @@ fn synapse_server_config() -> ClientConfig {
             priority: 50,
             refinable: Refinable::default(),
             profiles: None,
-            languages: None,
+            // languages: None,
         },
     );
 
@@ -137,7 +137,7 @@ fn synapse_admin_config() -> ClientConfig {
             priority: 100,
             refinable: Default::default(),
             profiles: None,
-            languages: None,
+            // languages: None,
         },
     );
 
