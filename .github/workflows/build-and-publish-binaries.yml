@@ -323,8 +323,8 @@ jobs:
       - name: Build and publish docker images
         uses: nick-invision/retry@v2
         with:
-          max_attempts: 5
-          retry_wait_seconds: 60
+          max_attempts: 10
+          retry_wait_seconds: 120
           timeout_minutes: 15
           command: |
             cd ./package-publisher && \
