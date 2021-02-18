@@ -66,7 +66,7 @@ fn default_config_rails() -> ClientConfig {
                 path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Single(
                     MatchPathSingleSegment::Exact("assets".parse().unwrap()),
                 )]),
-                query: Default::default(),
+                query_params: Default::default(),
                 methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
                 trailing_slash: Default::default(),
             },
@@ -80,7 +80,7 @@ fn default_config_rails() -> ClientConfig {
         Rule {
             filter: Filter {
                 path: MatchingPath::Wildcard,
-                query: Default::default(),
+                query_params: Default::default(),
                 methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
                 trailing_slash: Default::default(),
             },
@@ -238,7 +238,7 @@ fn default_config_laravel() -> ClientConfig {
                 path: MatchingPath::Strict(vec![MatchPathSegment::Single(
                     MatchPathSingleSegment::Exact("index.php".parse().unwrap()),
                 )]),
-                query: Default::default(),
+                query_params: Default::default(),
                 methods: MethodMatcher::All,
                 trailing_slash: TrailingSlashFilterRule::Deny,
             },
@@ -248,7 +248,7 @@ fn default_config_laravel() -> ClientConfig {
         Rule {
             filter: Filter {
                 path: MatchingPath::Wildcard,
-                query: Default::default(),
+                query_params: Default::default(),
                 methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
                 trailing_slash: Default::default(),
             },
