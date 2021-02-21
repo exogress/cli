@@ -1,0 +1,12 @@
+---
+version: 1.0.0
+revision: 1
+name: synapse-admin
+mount-points:
+  default:
+    handlers:
+      # simply respond with all files from static directory
+      synapse-admin:
+        kind: static-dir
+        priority: 100
+        dir: /app
