@@ -1,0 +1,34 @@
+---
+d---
+version: 1.0.0
+revision: 1
+name: synapse
+mount-points:
+  default:
+    handlers:
+      synapse:
+        kind: proxy
+        priority: 50
+        upstream: synapse
+        rules:
+
+          # allow federation through port 443
+          - filter:
+              path: [".well-known", "matrix", "server"]
+            action: respond
+            static-response:
+              kind: raw
+              fallback-accept: application/json
+              body:
+                - content-type: application/json
+                  content: "{ \"m.server\": \"{{ this.facts.mount_point_hostname }}:443\" }"
+                  engine: handlebars
+
+          # respond with all paths related to synapse server
+          - filter:
+              path: [["_synapse", "_matrix", "_client"], "*"]
+            action: invoke
+
+upstreams:
+  synapse:
+    port: 8008

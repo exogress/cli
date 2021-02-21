@@ -1,318 +1,47 @@
-use exogress_common::{
-    config_core::{
-        default_rules, refinable::Refinable, Action, CatchAction, CatchMatcher, ClientConfig,
-        ClientHandler, ClientHandlerVariant, ClientMount, Filter, MatchPathSegment,
-        MatchPathSingleSegment, MatchingPath, MethodMatcher, Proxy, RescueItem, Rule, StaticDir,
-        StatusCodeRange, TrailingSlashFilterRule, UpstreamDefinition, UpstreamSocketAddr,
-        CURRENT_VERSION, DEFAULT_CONFIG_FILE,
-    },
-    entities::{MountPointName, Upstream},
-};
-use http::{Method, StatusCode};
-use maplit::btreemap;
-use std::{collections::BTreeMap, fs::OpenOptions, io::Write, path::Path, str::FromStr};
+use clap::{App, ArgMatches};
+use include_dir::Dir;
+use std::fs;
 
+pub mod laravel_artisan;
 pub mod matrix_synapse;
+pub mod rails;
+pub mod svelte;
 
-pub fn create_exofile(
-    dir: impl AsRef<Path>,
-    config_file: impl AsRef<Path>,
-    framework: &str,
-) -> Result<(), anyhow::Error> {
-    let file_path = dir.as_ref().join(config_file);
-
-    let cfg = match framework {
-        "rails" => default_config_rails(),
-        "svelte" => default_config_svelte(),
-        "laravel-artisan" => default_config_laravel(),
-        "synaps" => {
-            matrix_synapse::generate(true, true).expect("Error creating configuration");
-            return Ok(());
+pub fn from_skeleton(skeleton: &Dir) -> anyhow::Result<()> {
+    for dir in skeleton.dirs() {
+        fs::create_dir_all(dir.path())?;
+        for file in dir.files() {
+            fs::write(file.path(), file.contents())?;
         }
-        _ => ClientConfig::sample(None, None, None, None),
-    };
+    }
 
-    let str = serde_yaml::to_vec(&cfg)?;
-
-    let mut f = OpenOptions::new()
-        .write(true)
-        .create_new(true)
-        .open(file_path)?;
-    f.write_all(str.as_ref())?;
-
-    info!("{} successfully created", DEFAULT_CONFIG_FILE);
+    for file in skeleton.files() {
+        fs::write(file.path(), file.contents())?;
+    }
 
     Ok(())
 }
 
-fn default_config_rails() -> ClientConfig {
-    let mut upstreams = BTreeMap::new();
-    let upstream: Upstream = "rails-server".parse().unwrap();
-    upstreams.insert(
-        upstream.clone(),
-        UpstreamDefinition {
-            addr: UpstreamSocketAddr {
-                port: 3000,
-                host: None,
-            },
-            health_checks: Default::default(),
-            profiles: None,
-        },
-    );
-
-    let static_rules = vec![
-        Rule {
-            filter: Filter {
-                path: MatchingPath::LeftWildcard(vec![MatchPathSegment::Single(
-                    MatchPathSingleSegment::Exact("assets".parse().unwrap()),
-                )]),
-                query_params: Default::default(),
-                methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
-                trailing_slash: Default::default(),
-            },
-            action: Action::Invoke {
-                modify_request: None,
-                on_response: vec![],
-                rescue: vec![],
-            },
-            profiles: None,
-        },
-        Rule {
-            filter: Filter {
-                path: MatchingPath::Wildcard,
-                query_params: Default::default(),
-                methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
-                trailing_slash: Default::default(),
-            },
-            action: Action::Invoke {
-                modify_request: None,
-                on_response: vec![],
-                rescue: vec![RescueItem {
-                    catch: CatchMatcher::StatusCode(StatusCodeRange::Single(StatusCode::NOT_FOUND)),
-                    handle: CatchAction::NextHandler,
-                }],
-            },
-            profiles: None,
-        },
-    ];
-
-    let mut handlers = BTreeMap::new();
-    handlers.insert(
-        "public".parse().unwrap(),
-        ClientHandler {
-            variant: ClientHandlerVariant::StaticDir(StaticDir {
-                dir: "./public".parse().unwrap(),
-                rebase: Default::default(),
-                cache: Default::default(),
-                post_processing: Default::default(),
-            }),
-            rules: static_rules,
-            priority: 10,
-            refinable: Refinable::default(),
-            profiles: None,
-            // languages: None,
-        },
-    );
-    handlers.insert(
-        "rails-server".parse().unwrap(),
-        ClientHandler {
-            variant: ClientHandlerVariant::Proxy(Proxy {
-                upstream,
-                rebase: Default::default(),
-                cache: Default::default(),
-                post_processing: Default::default(),
-                websockets: true,
-            }),
-            rules: default_rules(),
-            priority: 50,
-            refinable: Refinable::default(),
-            profiles: None,
-            // languages: None,
-        },
-    );
-
-    let mount_points = btreemap! {
-        MountPointName::from_str("default").unwrap() => ClientMount {
-            handlers,
-            refinable: Refinable::default(),
-            profiles: Default::default(),
-        }
-    };
-
-    ClientConfig {
-        version: CURRENT_VERSION.clone(),
-        revision: 1.into(),
-        name: "rails".parse().unwrap(),
-        mount_points,
-        upstreams,
-        refinable: Refinable::default(),
-    }
+pub fn init_app() -> App<'static, 'static> {
+    App::new("init")
+        .subcommand(matrix_synapse::init_subcommand())
+        .subcommand(laravel_artisan::init_subcommand())
+        .subcommand(rails::init_subcommand())
+        .subcommand(svelte::init_subcommand())
+        .about("Initialize directory with exogress configuration")
 }
 
-fn default_config_svelte() -> ClientConfig {
-    let mut upstreams = BTreeMap::new();
-    let upstream: Upstream = "svelte-dev-server".parse().unwrap();
-    upstreams.insert(
-        upstream.clone(),
-        UpstreamDefinition {
-            addr: UpstreamSocketAddr {
-                port: 5000,
-                host: None,
-            },
-            health_checks: Default::default(),
-            profiles: Some(vec!["develop".parse().unwrap()]),
-        },
-    );
-
-    let mut handlers = BTreeMap::new();
-    handlers.insert(
-        "built-assets".parse().unwrap(),
-        ClientHandler {
-            variant: ClientHandlerVariant::StaticDir(StaticDir {
-                dir: "./public".parse().unwrap(),
-                rebase: Default::default(),
-                cache: Default::default(),
-                post_processing: Default::default(),
-            }),
-            rules: default_rules(),
-            priority: 50,
-            refinable: Refinable::default(),
-            profiles: Some(vec!["production".parse().unwrap()]),
-            // languages: None,
-        },
-    );
-    handlers.insert(
-        "dev-server".parse().unwrap(),
-        ClientHandler {
-            variant: ClientHandlerVariant::Proxy(Proxy {
-                upstream,
-                rebase: Default::default(),
-                cache: Default::default(),
-                post_processing: Default::default(),
-                websockets: true,
-            }),
-            rules: default_rules(),
-            priority: 50,
-            refinable: Refinable::default(),
-            profiles: Some(vec!["develop".parse().unwrap()]),
-            // languages: None,
-        },
-    );
-
-    let mount_points = btreemap! {
-        MountPointName::from_str("default").unwrap() => ClientMount {
-            handlers,
-            refinable: Refinable::default(),
-            profiles: Default::default(),
+pub fn handle_subcommand(args: &ArgMatches) {
+    matrix_synapse::handle_subcommand(args);
+    laravel_artisan::handle_subcommand(args);
+    rails::handle_subcommand(args);
+    svelte::handle_subcommand(args);
+    match args.subcommand_name() {
+        Some(subcommand_name) => {
+            println!("Platform {} is not supported", subcommand_name);
         }
-    };
-
-    ClientConfig {
-        version: CURRENT_VERSION.clone(),
-        revision: 1.into(),
-        name: "svelte".parse().unwrap(),
-        mount_points,
-        upstreams: Default::default(),
-        refinable: Refinable::default(),
-    }
-}
-
-fn default_config_laravel() -> ClientConfig {
-    let mut upstreams = BTreeMap::new();
-    let upstream: Upstream = "artisan-server".parse().unwrap();
-    upstreams.insert(
-        upstream.clone(),
-        UpstreamDefinition {
-            addr: UpstreamSocketAddr {
-                port: 8000,
-                host: None,
-            },
-            health_checks: Default::default(),
-            profiles: None,
-        },
-    );
-
-    let static_rules = vec![
-        Rule {
-            filter: Filter {
-                path: MatchingPath::Strict(vec![MatchPathSegment::Single(
-                    MatchPathSingleSegment::Exact("index.php".parse().unwrap()),
-                )]),
-                query_params: Default::default(),
-                methods: MethodMatcher::All,
-                trailing_slash: TrailingSlashFilterRule::Deny,
-            },
-            action: Action::NextHandler,
-            profiles: None,
-        },
-        Rule {
-            filter: Filter {
-                path: MatchingPath::Wildcard,
-                query_params: Default::default(),
-                methods: MethodMatcher::Exact(vec![Method::GET.into(), Method::HEAD.into()]),
-                trailing_slash: Default::default(),
-            },
-            action: Action::Invoke {
-                modify_request: None,
-                on_response: vec![],
-                rescue: vec![RescueItem {
-                    catch: CatchMatcher::StatusCode(StatusCodeRange::Single(StatusCode::NOT_FOUND)),
-                    handle: CatchAction::NextHandler,
-                }],
-            },
-            profiles: None,
-        },
-    ];
-
-    let mut handlers = BTreeMap::new();
-    handlers.insert(
-        "laravel".parse().unwrap(),
-        ClientHandler {
-            variant: ClientHandlerVariant::Proxy(Proxy {
-                upstream,
-                rebase: Default::default(),
-                cache: Default::default(),
-                post_processing: Default::default(),
-                websockets: true,
-            }),
-            rules: default_rules(),
-            priority: 50,
-            refinable: Refinable::default(),
-            profiles: None,
-            // languages: None,
-        },
-    );
-    handlers.insert(
-        "public".parse().unwrap(),
-        ClientHandler {
-            variant: ClientHandlerVariant::StaticDir(StaticDir {
-                dir: "./public".parse().unwrap(),
-                rebase: Default::default(),
-                cache: Default::default(),
-                post_processing: Default::default(),
-            }),
-            rules: static_rules,
-            priority: 10,
-            refinable: Refinable::default(),
-            profiles: None,
-            // languages: None,
-        },
-    );
-
-    let mount_points = btreemap! {
-        MountPointName::from_str("default").unwrap() => ClientMount {
-            handlers,
-            refinable: Refinable::default(),
-            profiles: Default::default(),
+        None => {
+            println!("Please, provide a valid platform name");
         }
-    };
-
-    ClientConfig {
-        version: CURRENT_VERSION.clone(),
-        revision: 1.into(),
-        name: "laravel".parse().unwrap(),
-        mount_points,
-        upstreams,
-        refinable: Refinable::default(),
     }
 }

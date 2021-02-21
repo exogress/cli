@@ -118,17 +118,7 @@ pub fn main() {
                 .default_value(DEFAULT_CONFIG_FILE)
                 .takes_value(true),
         )
-        .subcommand(
-            App::new("init")
-                .arg(
-                    Arg::with_name("framework")
-                        .help("framework name")
-                        .takes_value(true)
-                        .required(true)
-                        .possible_values(&["rails", "svelte", "laravel-artisan", "synaps"]),
-                )
-                .about("create Exofile.yml"),
-        )
+        .subcommand(init::init_app())
         .subcommand(exogress_common::common_utils::clap::threads::add_args(
             exogress_common::common_utils::clap::log::add_args(spawn_app),
         ));
@@ -142,12 +132,8 @@ pub fn main() {
         .expect("--config is not set")
         .to_string();
 
-    if let Some(init_matches) = matches.subcommand_matches("init") {
-        let framework = init_matches.value_of("framework").unwrap();
-
-        init::create_exofile(".", &config_path, framework).expect("Could not init");
-        println!("Configuration generated to {}", config_path);
-
+    if let Some(init_subcommand) = matches.subcommand_matches("init") {
+        init::handle_subcommand(init_subcommand);
         std::process::exit(0);
     }
 

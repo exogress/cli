@@ -1,0 +1,24 @@
+---
+version: 1.0.0
+revision: 1
+name: svelte
+mount-points:
+  default:
+    handlers:
+      # serve static dirs in production mode
+      built-assets:
+        kind: static-dir
+        dir: "./public"
+        priority: 50
+        profiles: ["production"]
+
+      # proxy to dev server in develop mode
+      dev-server:
+        kind: proxy
+        upstream: svelte-dev-server
+        priority: 50
+        profiles: ["develop"]
+upstreams:
+  rails-server:
+    port: 5000
+    profiles: ["develop"]

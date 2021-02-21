@@ -1,0 +1,35 @@
+---
+version: 1.0.0
+revision: 1
+name: rails
+mount-points:
+  default:
+    handlers:
+      # serve files for ./public
+      public:
+        kind: static-dir
+        priority: 10
+        dir: "./public"
+        rules:
+          # all paths under assets are served, and respond with 404 if the file does not exist
+          - filter:
+              path: ["assets",  "*"]
+              methods: ["GET", "HEAD"]
+            action: invoke
+
+          # all other files may exist in static directory, so at first try to respond with the file
+          - filter:
+              path: ["*"]
+              methods: ["GET", "HEAD"]
+            action: invoke
+            rescue:
+              - catch: "status-code:404"
+                action: next-handler
+
+      rails-server:
+        kind: proxy
+        priority: 50
+        upstream: rails-server
+upstreams:
+  rails-server:
+    port: 3000

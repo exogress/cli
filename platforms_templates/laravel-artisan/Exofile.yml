@@ -1,0 +1,37 @@
+---
+version: 1.0.0
+revision: 1
+name: laravel
+mount-points:
+  default:
+    handlers:
+      # serve files from ./public
+      public:
+        kind: static-dir
+        priority: 10
+        dir: "./public"
+        rules:
+          # /index.html always go to the next handler
+          - filter:
+              path: ["index.php"]
+              trailing-slash: deny
+            action: next-handler
+
+          # try to serve other files
+          - filter:
+              path: ["*"]
+              methods: ["GET", "HEAD"]
+            action: invoke
+            rescue:
+              - catch: "status-code:404"
+                action: next-handler
+
+      # proxy to artisan server
+      laravel:
+        kind: proxy
+        priority: 50
+        upstream: artisan-server
+
+upstreams:
+  artisan-server:
+    port: 8000
