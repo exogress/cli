@@ -521,7 +521,7 @@ dependencies = [
 [[package]]
 name = "exogress-common"
 version = "0.0.1-beta.1"
-source = "git+https://github.com/exogress/exogress.git?branch=master#4b663bc033680d26c627a0876fc4caf1817384c5"
+dsource = "git+https://github.com/exogress/exogress.git?branch=master#b808af1459c12abd88a9c2527cf115c61b42d2ca"
 dependencies = [
  "anyhow",
  "bincode",
@@ -2945,8 +2945,9 @@ dependencies = [
 
 [[package]]
 name = "valico"
-version = "3.5.1-alpha.0"
-source = "git+https://github.com/agavrilov/valico.git?branch=PR/update-dependencies#c663f658339f7dd662375a44a16e968be2f43663"
+version = "3.6.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "d81a70f930f9e6cd04669d38abcf232f96b193acceb0f4c006427ddec6e08b10"
 dependencies = [
  "base64 0.13.0",
  "chrono",
