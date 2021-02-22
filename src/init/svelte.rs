@@ -1,4 +1,4 @@
-duse crate::init::from_skeleton;
+use crate::init::from_skeleton;
 use clap::{App, ArgMatches};
 use include_dir::{include_dir, Dir};
 
