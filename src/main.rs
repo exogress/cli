@@ -240,12 +240,13 @@ pub fn main() {
 
         let process = match spawn_matches.values_of("command") {
             Some(cmd_and_args) if cmd_and_args.len() > 0 => {
-                let mut c: VecDeque<_> = cmd_and_args.collect();
+                let mut commands_deque: VecDeque<_> = cmd_and_args.collect();
 
-                let mut command = Command::new(c.pop_front().expect("FIXME"));
+                // We may unwrap here because cmd_and_args is > 0
+                let mut command = Command::new(commands_deque.pop_front().unwrap());
 
                 command
-                    .args(c)
+                    .args(commands_deque)
                     .stdout(Stdio::piped())
                     .stderr(Stdio::piped());
 
