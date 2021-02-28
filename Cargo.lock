@@ -511,7 +511,7 @@ dependencies = [
 [[package]]
 name = "exogress-common"
 version = "0.0.1-beta.1"
-source = "git+https://github.com/exogress/exogress.git?branch=master#7c3e516c0592dc2e36088f435090367b92c791c9"
+source = "git+https://github.com/exogress/exogress.git?branch=master#f3f4e9a13681496a4d8f4e4c7e8efac6a03fa4c6"
 dependencies = [
  "anyhow",
  "bincode",

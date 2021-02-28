@@ -317,15 +317,15 @@ pub fn main() {
         tokio::select! {
             r = client => {
                 if let Err(e) = r {
-                    error!("client stopped with error: {:?}", e);
+                    error!("Client stopped with error: {}", e);
                 }
             },
             _ = process => {},
             r = app_stop_wait => {
-                info!("stop request received: {}", r);
+                info!("Stop request received: {}", r);
             },
         }
     });
 
-    info!("we are done");
+    info!("Exiting");
 }
