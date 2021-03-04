@@ -11,7 +11,7 @@ pub fn init_subcommand() -> App<'static, 'static> {
 static SKELETON: Dir = include_dir!("platforms_templates/svelte");
 
 pub fn generate() -> anyhow::Result<()> {
-    from_skeleton(&SKELETON)
+    from_skeleton(&SKELETON, Default::default())
 }
 
 pub fn handle_subcommand(args: &ArgMatches) {

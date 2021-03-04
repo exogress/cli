@@ -14,7 +14,7 @@ static SKELETON: Dir = include_dir!("platforms_templates/synapse");
 pub fn generate() -> anyhow::Result<()> {
     fs::create_dir_all("data")?;
 
-    from_skeleton(&SKELETON)?;
+    from_skeleton(&SKELETON, Default::default())?;
 
     println!("Fill-in required data in files: \n");
     println!(" - exogress.env");
