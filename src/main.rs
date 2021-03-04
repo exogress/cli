@@ -23,7 +23,7 @@ use tokio::{
     runtime::Builder,
 };
 
-use exogress_common::config_core::DEFAULT_CONFIG_FILE;
+use exogress_common::{config_core::DEFAULT_CONFIG_FILE, entities::SmolStr};
 use futures::channel::mpsc;
 use hashbrown::HashMap;
 use std::str::FromStr;
@@ -309,6 +309,12 @@ pub fn main() {
             .labels(labels)
             .profile(profile)
             .gw_tunnels_port(gw_tunnels_port)
+            .additional_connection_params({
+                let mut map = HashMap::<SmolStr, SmolStr>::new();
+                map.insert("client".into(), "cli".into());
+                map.insert("cli_version".into(), crate_version!().into());
+                map
+            })
             .build()
             .unwrap()
             .spawn(reload_config_tx, reload_config_rx, resolver)
