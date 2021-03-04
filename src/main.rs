@@ -229,7 +229,7 @@ pub fn main() {
             async move {
                 let mut hup_listener =
                     tokio::signal::unix::signal(tokio::signal::unix::SignalKind::hangup()).unwrap();
-                while let Some(_) = hup_listener.recv().await {
+                while hup_listener.recv().await.is_some() {
                     info!("SIGHUP received");
                     reload_config_tx.unbounded_send(()).unwrap();
                 }
