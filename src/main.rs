@@ -104,10 +104,10 @@ pub fn main() {
                 .multiple(true),
         );
 
-    let app = App::new("Exogress CLI")
+    let app = App::new("Exogress Client")
         .version(crate_version!())
         .author("Exogress Team <team@exogress.com>")
-        .about("Expose your app to Exogress cloud load balancer")
+        .about("Exogress command-line client. See https://exogress.com for more details.")
         .arg(
             Arg::with_name("config")
                 .short("c")
@@ -137,16 +137,18 @@ pub fn main() {
         std::process::exit(0);
     }
 
+    exogress_common::common_utils::clap::autocompletion::handle_autocompletion(
+        &mut app.clone(),
+        &matches,
+        "exogress",
+    );
+
     let spawn_matches = if let Some(matches) = matches.subcommand_matches("spawn") {
         matches
     } else {
         app.print_long_help().unwrap();
         std::process::exit(1);
     };
-
-    exogress_common::common_utils::clap::autocompletion::handle_autocompletion(
-        &mut app, &matches, "exogress",
-    );
 
     let cloud_endpoint: Url = std::env::var("EXG_CLOUD_ENDPOINT")
         .unwrap_or_else(|_| DEFAULT_CLOUD_ENDPOINT.to_string())
