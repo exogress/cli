@@ -147,6 +147,7 @@ pub fn main() {
         matches
     } else {
         app.print_long_help().unwrap();
+        println!();
         std::process::exit(1);
     };
 
