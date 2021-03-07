@@ -459,7 +459,7 @@ dependencies = [
 
 [[package]]
 name = "exogress"
-version = "0.1.0-pre.4"
+version = "0.1.0"
 dependencies = [
  "anyhow",
  "clap",
