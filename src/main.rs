@@ -215,8 +215,6 @@ pub fn main() {
         .flatten()
         .collect::<HashMap<LabelName, LabelValue>>();
 
-    info!("labels = {:?}", labels);
-
     let (app_stop_handle, app_stop_wait) = stop_handle::<StopReason>();
 
     rt.block_on(async move {
