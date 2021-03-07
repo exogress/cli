@@ -32,7 +32,7 @@ handlebars = "3.5.0"
 exogress-common = { git = "https://github.com/exogress/exogress.git", branch = "master", version = "0.0.1-beta", features = ["client-core", "tunnel", "config-core", "entities", "common-utils"], default-features = false }
 
 [package.metadata.deb]
-depends = "$auto, ca-certificates"
+depends = "libc6 (>= 2.19), ca-certificates"
 section = "net"
 priority = "optional"
 
