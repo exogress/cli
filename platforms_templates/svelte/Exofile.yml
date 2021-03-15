@@ -19,6 +19,6 @@ mount-points:
         priority: 50
         profiles: ["develop"]
 upstreams:
-  rails-server:
+  svelte-dev-server:
     port: 5000
     profiles: ["develop"]
