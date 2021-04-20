@@ -14,15 +14,14 @@ use hex;
 use reqwest;
 use semver::Version;
 use sha2::{Digest, Sha256};
-use std::collections::HashMap;
-use std::fs::File;
-use std::io::Write;
-use std::time::Duration;
+use std::{collections::HashMap, fs::File, io::Write, time::Duration};
 use tempfile::TempDir;
-use tokio;
-use tokio::process::Command;
-use tokio::stream::StreamExt;
-use tokio::time::{delay_for, timeout};
+use tokio::{
+    self,
+    process::Command,
+    stream::StreamExt,
+    time::{delay_for, timeout},
+};
 use tracing::Level;
 use url::Url;
 
@@ -218,10 +217,9 @@ async fn main() {
             .to_string();
 
         let macos_url = format!(
-            "https://github.com/exogress/cli/releases/download/v{version}/exogress-macos-x86_64.tar.gz",
+            "https://github.com/exogress/cli/archive/refs/tags/v{version}.tar.gz",
             version = version_string
         );
-        let linux_url = format!("https://github.com/exogress/cli/releases/download/v{version}/exogress-linux-x86_64-musl-static.tar.gz", version = version_string);
 
         // let repo_url = format!(
         //     "https://github.com/exogress/exogress/archive/{}.tar.gz",
@@ -229,10 +227,9 @@ async fn main() {
         // );
 
         let macos_archive = fetch_archive(&macos_url).await;
-        let linux_archive = fetch_archive(&linux_url).await;
 
         let macos_hash = hash_archive(&macos_archive);
-        let linux_hash = hash_archive(&linux_archive);
+
         info!("generate homebrew...");
         let homebrew_tpl = TEMPLATES_DIR
             .get_file("homebrew.mustache")
@@ -244,10 +241,8 @@ async fn main() {
 
         let mut data = HashMap::new();
         data.insert("MACOS_URL", macos_url.as_str());
-        data.insert("LINUX_URL", linux_url.as_str());
         data.insert("VERSION", version_string.as_str());
         data.insert("MACOS_SHA256", macos_hash.as_str());
-        data.insert("LINUX_SHA256", linux_hash.as_str());
 
         let mut bytes = vec![];
 
