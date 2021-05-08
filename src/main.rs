@@ -104,8 +104,14 @@ pub fn main() {
                 .multiple(true),
         );
 
-    let app = App::new("Exogress Client")
-        .version(crate_version!())
+    let version = format!(
+        "{} (lib {})",
+        crate_version!(),
+        exogress_common::client_core::VERSION
+    );
+
+    let app = App::new("Exogress Command-Line Client")
+        .version(version.as_str())
         .author("Exogress Team <team@exogress.com>")
         .about("Exogress command-line client. See https://exogress.com for more details.")
         .arg(
