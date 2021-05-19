@@ -30,6 +30,7 @@ use std::str::FromStr;
 use trust_dns_resolver::{TokioAsyncResolver, TokioHandle};
 use url::Url;
 
+#[cfg(feature = "jemalloc")]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
 

@@ -57,8 +57,10 @@ jobs:
         include:
           - os: ubuntu-latest
             target: x86_64-unknown-linux-gnu
+            features: jemalloc
           - os: macOS-latest
             target: x86_64-apple-darwin
+            features: jemalloc
           - os: windows-latest
             target: i686-pc-windows-msvc
           - os: windows-latest
@@ -90,13 +92,13 @@ jobs:
         uses: actions-rs/cargo@v1
         with:
           command: build
-          args: --target=${{ matrix.target }}
+          args: --target=${{ matrix.target }} --features=${{ matrix.features }}
 
       - name: Run cargo test
         uses: actions-rs/cargo@v1
         with:
           command: test
-          args: --target=${{ matrix.target }}
+          args: --target=${{ matrix.target }} --features=${{ matrix.features }}
 
       # Workaround for actions/cache#403 (https://github.com/actions/cache/issues/403)
       #
@@ -155,4 +157,4 @@ jobs:
         with:
           use-cross: true
           command: build
-          args: --target=${{ matrix.target }} -p exogress
+          args: --target=${{ matrix.target }} -p exogress --features=jemalloc
