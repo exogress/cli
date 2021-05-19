@@ -30,6 +30,9 @@ use std::str::FromStr;
 use trust_dns_resolver::{TokioAsyncResolver, TokioHandle};
 use url::Url;
 
+#[global_allocator]
+static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
 pub fn main() {
     let spawn_app = App::new("spawn")
         .about("spawn exogress client")
