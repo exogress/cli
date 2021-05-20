@@ -166,6 +166,13 @@ jobs:
           command: install
           args: cargo-deb
 
+      - name: Install cargo-wix
+        uses: actions-rs/cargo@v1
+        if: contains(matrix.target, 'windows')
+        with:
+          command: install
+          args: cargo-wix
+
       #      - name: Install cargo-rpm
       #        uses: actions-rs/cargo@v1
       #        if: contains(matrix.target, 'gnu')
@@ -197,6 +204,26 @@ jobs:
           upload_url: ${{ github.event.release.upload_url }}
           asset_path: ${{ steps.pack-deb.outputs.deb_path }}
           asset_name: ${{ steps.pack-deb.outputs.deb_file }}
+          asset_content_type: application/octet-stream
+
+      - name: Build wix package
+        id: pack-wix
+        if: contains(matrix.target, 'wix')
+        run: |
+          WIX_PATH=$(cargo wix --target=${{ matrix.target }} 2>/dev/null)
+          WIX_FILE=$(basename $DEB_PATH)
+          echo "::set-output name=deb_path::$WIX_PATH"
+          echo "::set-output name=deb_file::$WIX_FILE"
+
+      - name: Upload wix package
+        uses: actions/upload-release-asset@v1.0.2
+        if: contains(matrix.target, 'windows')
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ github.event.release.upload_url }}
+          asset_path: ${{ steps.pack-wix.outputs.wix_path }}
+          asset_name: ${{ steps.pack-wix.outputs.wix_file }}
           asset_content_type: application/octet-stream
 
       - name: Upload release binary (non-Windows)
