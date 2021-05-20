@@ -148,7 +148,7 @@ jobs:
         with:
           use-cross: true
           command: update
-          args: -p exogress-common --features=${{ matrix.features }}
+          args: -p exogress-common
 
       - name: Build release binary
         uses: actions-rs/cargo@v1
