@@ -208,7 +208,7 @@ jobs:
 
       - name: Build wix package
         id: pack-wix
-        if: contains(matrix.target, 'wix')
+        if: contains(matrix.target, 'windows')
         run: |
           WIX_PATH=$(cargo wix --target=${{ matrix.target }} 2>/dev/null)
           WIX_FILE=$(basename $DEB_PATH)
