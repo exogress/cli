@@ -77,7 +77,7 @@ jobs:
             upload_asset_name: exogress-linux-arm-gnueabi
             rustflags: ''
           - os: ubuntu-latest
-            features: 'jemalloc'
+            features: ''
             target: arm-unknown-linux-musleabi
             upload_asset_name: exogress-linux-arm-musleabi-static
             rustflags: ''
@@ -87,7 +87,7 @@ jobs:
             upload_asset_name: exogress-linux-armv7-gnueabihf
             rustflags: ''
           - os: ubuntu-latest
-            features: 'jemalloc'
+            features: ''
             target: armv7-unknown-linux-musleabihf
             upload_asset_name: exogress-linux-armv7-musleabihf-static
             rustflags: ''
