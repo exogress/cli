@@ -485,7 +485,6 @@ dependencies = [
 name = "exogress"
 version = "0.4.2"
 dependencies = [
- "ansi_term 0.11.0",
  "anyhow",
  "clap",
  "exogress-common",
@@ -514,8 +513,9 @@ dependencies = [
 [[package]]
 name = "exogress-common"
 version = "0.1.0"
-source = "git+https://github.com/exogress/exogress.git?branch=master#64d26ba3f63e0af51c5a0a12d899a47ef6f70093"
+source = "git+https://github.com/exogress/exogress.git?branch=master#22d9d7407558631f794052f09b44251fa9fcd833"
 dependencies = [
+ "ansi_term 0.11.0",
  "anyhow",
  "bs58",
  "byteorder",
