@@ -133,6 +133,9 @@ pub fn main() {
             exogress_common::common_utils::clap::log::add_args(spawn_app),
         ));
 
+    #[cfg(windows)]
+    let _enabled = ansi_term::enable_ansi_support();
+
     let mut app = exogress_common::common_utils::clap::autocompletion::add_args(app);
 
     let matches = app.clone().get_matches();
