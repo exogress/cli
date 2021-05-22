@@ -17,11 +17,7 @@ use exogress_common::{
 };
 use futures::{future, future::Either, select_biased, FutureExt};
 use stop_handle::stop_handle;
-use tokio::{
-    io::{AsyncBufReadExt, BufReader},
-    process::Command,
-    runtime::Builder,
-};
+use tokio::{process::Command, runtime::Builder};
 
 use exogress_common::{config_core::DEFAULT_CONFIG_FILE, entities::SmolStr};
 use futures::channel::mpsc;
@@ -263,27 +259,20 @@ pub fn main() {
 
                 let mut child = command.spawn().expect("failed to spawn command");
 
-                let stderr = child.stderr.take().unwrap();
-                let stdout = child.stdout.take().unwrap();
+                let mut stderr = child.stderr.take().unwrap();
+                let mut stdout = child.stdout.take().unwrap();
 
-                let mut stdout_reader = BufReader::new(stdout).lines();
-                let mut stderr_reader = BufReader::new(stderr).lines();
-
-                let stdout_forward = {
-                    async move {
-                        while let Ok(Some(line)) = stdout_reader.next_line().await {
-                            info!("O {}", line);
-                        }
-                    }
+                let stdout_forward = async move {
+                    tokio::io::copy(&mut stdout, &mut tokio::io::stdout())
+                        .await
+                        .ok();
                 }
                 .fuse();
 
-                let stderr_forward = {
-                    async move {
-                        while let Ok(Some(line)) = stderr_reader.next_line().await {
-                            info!("E {}", line);
-                        }
-                    }
+                let stderr_forward = async move {
+                    tokio::io::copy(&mut stderr, &mut tokio::io::stderr())
+                        .await
+                        .ok();
                 }
                 .fuse();
 
