@@ -1,7 +1,7 @@
 [package]
 name = "exogress"
 description = "Exogress command-line client"
-version = "0.4.4"
+version = "0.5.0-beta.1"
 authors = ["Exogress Team <team@exogress.com>"]
 edition = "2018"
 license = "Apache 2.0"
@@ -30,7 +30,7 @@ regex = "1.3.7"
 handlebars = "3.5.0"
 jemallocator = { version = "0.3.2", optional = true }
 
-exogress-common = { git = "https://github.com/exogress/exogress.git", branch = "master", version = "0.1.0", features = ["client-core", "tunnel", "config-core", "entities", "common-utils"], default-features = false }
+exogress-common = { git = "https://github.com/exogress/exogress.git", branch = "master", version = "0.2.0", features = ["client-core", "tunnel", "config-core", "entities", "common-utils"], default-features = false }
 
 [package.metadata.deb]
 depends = "libc6 (>= 2.19), ca-certificates"
