@@ -512,8 +512,8 @@ dependencies = [
 
 [[package]]
 name = "exogress-common"
-version = "0.2.0"
-source = "git+https://github.com/exogress/exogress.git?branch=master#4b5f9a37f2e684d890bccea653625856e9f2edeb"
+version = "0.2.0-beta.1"
+source = "git+https://github.com/exogress/exogress.git?branch=master#6e7d3ae24003e030daab65a8f7a76344dbc1e861"
 dependencies = [
  "ansi_term 0.11.0",
  "anyhow",
@@ -536,7 +536,7 @@ dependencies = [
  "include_dir",
  "itertools",
  "jsonwebtoken",
- "langtag",
+ "language-tags",
  "lazy_static",
  "linked-hash-map",
  "lru_time_cache",
@@ -1179,9 +1179,9 @@ dependencies = [
 ]
 
 [[package]]
-name = "langtag"
-version = "0.2.0"
-source = "git+https://github.com/glebpom/langtag.git?branch=master#905672c535a4951f3c744a68abb199877eefa59a"
+name = "language-tags"
+version = "0.3.1"
+source = "git+https://github.com/glebpom/rust-language-tags.git#81f35e1a87bec64e0bc052bd9fbab9f5cc625caa"
 dependencies = [
  "serde",
 ]
@@ -2087,11 +2087,12 @@ dependencies = [
 
 [[package]]
 name = "schemars"
-version = "0.8.0"
-source = "git+https://github.com/glebpom/schemars.git?branch=exogress#d7ceb30b40835e459921534048a9779e889887d2"
+version = "0.8.3"
+source = "git+https://github.com/glebpom/schemars.git?branch=exogress#6779f3845aa89ba403f7fd08934e66534f8b55d6"
 dependencies = [
  "chrono",
  "dyn-clone",
+ "language-tags",
  "schemars_derive",
  "semver 0.11.0",
  "serde",
@@ -2102,8 +2103,8 @@ dependencies = [
 
 [[package]]
 name = "schemars_derive"
-version = "0.8.0"
-source = "git+https://github.com/glebpom/schemars.git?branch=exogress#d7ceb30b40835e459921534048a9779e889887d2"
+version = "0.8.3"
+source = "git+https://github.com/glebpom/schemars.git?branch=exogress#6779f3845aa89ba403f7fd08934e66534f8b55d6"
 dependencies = [
  "proc-macro2",
  "quote",
@@ -2615,18 +2616,18 @@ dependencies = [
 
 [[package]]
 name = "thiserror"
-version = "1.0.24"
+version = "1.0.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "e0f4a65597094d4483ddaed134f409b2cb7c1beccf25201a9f73c719254fa98e"
+checksum = "fa6f76457f59514c7eeb4e59d891395fab0b2fd1d40723ae737d64153392e9c6"
 dependencies = [
  "thiserror-impl",
 ]
 
 [[package]]
 name = "thiserror-impl"
-version = "1.0.24"
+version = "1.0.25"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "7765189610d8241a44529806d6fd1f2e0a08734313a35d5b3a556f92b381f3c0"
+checksum = "8a36768c0fbf1bb15eca10defa29526bda730a2376c2ab4393ccfa16fb1a318d"
 dependencies = [
  "proc-macro2",
  "quote",
