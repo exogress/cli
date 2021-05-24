@@ -105,9 +105,10 @@ pub fn main() {
         );
 
     let version = format!(
-        "{} (lib {})",
+        "{} (lib {}, config {})",
         crate_version!(),
-        exogress_common::client_core::VERSION
+        exogress_common::client_core::VERSION,
+        exogress_common::config_core::CURRENT_VERSION.0,
     );
 
     let app = App::new("Exogress Command-Line Client")
