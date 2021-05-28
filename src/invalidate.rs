@@ -1,5 +1,5 @@
 use crate::{add_authentication_args, extract_authentication_args, Authentication};
-use anyhow::{anyhow, Context, Error};
+use anyhow::anyhow;
 use clap::{App, Arg, ArgMatches};
 use exogress_common::{api::SingleInvalidationRequest, client_core::api::ApiClient};
 use tokio::runtime::Runtime;
