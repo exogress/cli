@@ -4,22 +4,27 @@ extern crate tracing;
 extern crate shadow_clone;
 
 mod init;
+mod invalidate;
 mod termination;
 
 use std::{collections::VecDeque, process::Stdio};
 
 use crate::termination::StopReason;
-use clap::{crate_version, App, Arg};
+use clap::{crate_version, App, Arg, ArgMatches};
 use exogress_common::{
     client_core::{Client, DEFAULT_CLOUD_ENDPOINT},
     common_utils::termination::stop_signal_listener,
-    entities::{LabelName, LabelValue, ProfileName, Ulid},
+    entities::{LabelName, LabelValue, ProfileName},
 };
 use futures::{future, future::Either, select_biased, FutureExt};
 use stop_handle::stop_handle;
 use tokio::{process::Command, runtime::Builder};
 
-use exogress_common::{config_core::DEFAULT_CONFIG_FILE, entities::SmolStr};
+use crate::invalidate::invalidations_args;
+use exogress_common::{
+    config_core::DEFAULT_CONFIG_FILE,
+    entities::{AccessKeyId, AccountName, ProjectName, SmolStr},
+};
 use futures::channel::mpsc;
 use hashbrown::HashMap;
 use std::str::FromStr;
@@ -29,6 +34,98 @@ use url::Url;
 #[cfg(feature = "jemalloc")]
 #[global_allocator]
 static ALLOC: jemallocator::Jemalloc = jemallocator::Jemalloc;
+
+pub fn add_authentication_args<'a>(app: clap::App<'a, 'a>) -> clap::App<'a, 'a> {
+    app.arg(
+        Arg::with_name("project")
+            .long("project")
+            .value_name("STRING")
+            .help("Project")
+            .env("EXG_PROJECT")
+            .required(true)
+            .takes_value(true),
+    )
+    .arg(
+        Arg::with_name("access_key_id")
+            .long("access-key-id")
+            .value_name("ULID")
+            .help("ACCESS_KEY_ID")
+            .env("EXG_ACCESS_KEY_ID")
+            .hide_env_values(true)
+            .required(true)
+            .takes_value(true),
+    )
+    .arg(
+        Arg::with_name("secret_access_key")
+            .long("secret-access-key")
+            .value_name("STRING")
+            .help("SECRET_ACCESS_KEY")
+            .env("EXG_SECRET_ACCESS_KEY")
+            .hide_env_values(true)
+            .required(true)
+            .takes_value(true),
+    )
+    .arg(
+        Arg::with_name("account")
+            .long("account")
+            .value_name("STRING")
+            .env("EXG_ACCOUNT")
+            .help("Account")
+            .required(true)
+            .takes_value(true),
+    )
+}
+
+pub struct Authentication {
+    access_key_id: AccessKeyId,
+    secret_access_key: String,
+    account: AccountName,
+    project: ProjectName,
+    cloud_endpoint: Url,
+    api_endpoint: Url,
+}
+
+pub fn extract_authentication_args(spawn_matches: &ArgMatches) -> anyhow::Result<Authentication> {
+    let access_key_id: AccessKeyId = spawn_matches
+        .value_of("access_key_id")
+        .expect("access_key_id is not set")
+        .parse()
+        .expect("access_key_id is not ULID");
+
+    let secret_access_key = spawn_matches
+        .value_of("secret_access_key")
+        .expect("secret_access_key is not set")
+        .to_string();
+
+    let account = spawn_matches
+        .value_of("account")
+        .expect("account is not set")
+        .parse()?;
+
+    let project = spawn_matches
+        .value_of("project")
+        .expect("project is not set")
+        .parse()?;
+
+    let cloud_endpoint: Url = std::env::var("EXG_CLOUD_ENDPOINT")
+        .unwrap_or_else(|_| DEFAULT_CLOUD_ENDPOINT.to_string())
+        .parse()
+        .expect("bad cloud endpoint provided");
+
+    let api_endpoint: Url = std::env::var("EXG_CLOUD_API_OVERRIDE")
+        .ok()
+        .map(|var| var.parse().expect("bad cloud endpoint provided"))
+        .unwrap_or_else(|| cloud_endpoint.clone());
+
+    Ok(Authentication {
+        access_key_id,
+        secret_access_key,
+        account,
+        project,
+        cloud_endpoint,
+        api_endpoint,
+    })
+}
 
 pub fn main() {
     let spawn_app = App::new("spawn")
@@ -41,50 +138,12 @@ pub fn main() {
                 .required(false),
         )
         .arg(
-            Arg::with_name("access_key_id")
-                .long("access-key-id")
-                .value_name("ULID")
-                .help("ACCESS_KEY_ID")
-                .env("EXG_ACCESS_KEY_ID")
-                .hide_env_values(true)
-                .required(true)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("secret_access_key")
-                .long("secret-access-key")
-                .value_name("STRING")
-                .help("SECRET_ACCESS_KEY")
-                .env("EXG_SECRET_ACCESS_KEY")
-                .hide_env_values(true)
-                .required(true)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("account")
-                .long("account")
-                .value_name("STRING")
-                .env("EXG_ACCOUNT")
-                .help("Account")
-                .required(true)
-                .takes_value(true),
-        )
-        .arg(
             Arg::with_name("profile")
                 .short("p")
                 .long("profile")
                 .help("Profile name")
                 .env("EXG_PROFILE")
                 .required(false)
-                .takes_value(true),
-        )
-        .arg(
-            Arg::with_name("project")
-                .long("project")
-                .value_name("STRING")
-                .help("Project")
-                .env("EXG_PROJECT")
-                .required(true)
                 .takes_value(true),
         )
         .arg(
@@ -103,6 +162,10 @@ pub fn main() {
                 .last(true)
                 .multiple(true),
         );
+
+    let spawn_app = add_authentication_args(spawn_app);
+
+    let invalidate_subcommand = invalidations_args();
 
     let version = format!(
         "{} (lib {}, config {})",
@@ -126,6 +189,7 @@ pub fn main() {
                 .takes_value(true),
         )
         .subcommand(init::init_app())
+        .subcommand(invalidate_subcommand)
         .subcommand(exogress_common::common_utils::clap::threads::add_args(
             exogress_common::common_utils::clap::log::add_args(spawn_app),
         ));
@@ -144,6 +208,11 @@ pub fn main() {
         std::process::exit(0);
     }
 
+    if let Some(invalidate_subcommand) = matches.subcommand_matches("invalidate") {
+        invalidate::handle_subcommand(invalidate_subcommand);
+        std::process::exit(0);
+    }
+
     exogress_common::common_utils::clap::autocompletion::handle_autocompletion(
         &mut app.clone(),
         &matches,
@@ -157,11 +226,6 @@ pub fn main() {
         println!();
         std::process::exit(1);
     };
-
-    let cloud_endpoint: Url = std::env::var("EXG_CLOUD_ENDPOINT")
-        .unwrap_or_else(|_| DEFAULT_CLOUD_ENDPOINT.to_string())
-        .parse()
-        .expect("bad cloud endpoint provided");
 
     let gw_tunnels_port: u16 = std::env::var("EXG_GW_TUNNELS_PORT")
         .map(|v| v.parse().expect("bad EXG_GW_TUNNELS_PORT"))
@@ -179,26 +243,14 @@ pub fn main() {
 
     let should_watch_config = !spawn_matches.is_present("no_watch_config");
 
-    let access_key_id: Ulid = spawn_matches
-        .value_of("access_key_id")
-        .expect("access_key_id is not set")
-        .parse()
-        .expect("access_key_id is not ULID");
-
-    let secret_access_key = spawn_matches
-        .value_of("secret_access_key")
-        .expect("secret_access_key is not set")
-        .to_string();
-
-    let account = spawn_matches
-        .value_of("account")
-        .expect("account is not set")
-        .to_string();
-
-    let project = spawn_matches
-        .value_of("project")
-        .expect("project is not set")
-        .to_string();
+    let Authentication {
+        access_key_id,
+        secret_access_key,
+        account,
+        project,
+        cloud_endpoint,
+        ..
+    } = extract_authentication_args(spawn_matches).expect("bad authentication data provided");
 
     let profile: Option<ProfileName> = spawn_matches
         .value_of("profile")
